@@ -12,8 +12,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8448:8448"
-      - "8008:8008"
       - "8080:8080"
     environment:
       - CF_API_EMAIL=${CF_API_EMAIL:-}
@@ -22,7 +20,6 @@ services:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic:/etc/traefik/dynamic:ro
       - ./letsencrypt:/letsencrypt
-      - ./ssl:/matrix/traefik/ssl
     networks:
       - traefik
 

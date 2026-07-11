@@ -60,25 +60,6 @@
         - supabase_dump is succeeded
       tags: [db-supabase]
 
-    # ── Matrix ──────────────────────────────────────
-    - name: Dump Matrix Synapse DB
-      community.docker.docker_container_exec:
-        container: matrix-db
-        command: pg_dump -U synapse --clean --if-exists -d synapse -f /tmp/synapse-dump.sql
-      when: matrix_enable | default(true)
-      ignore_errors: yes
-      register: matrix_dump
-      tags: [db-matrix]
-
-    - name: Copy Matrix dump
-      command:
-        cmd: docker cp matrix-db:/tmp/synapse-dump.sql "{{ backup_dir }}/synapse-{{ ts }}.sql"
-      changed_when: true
-      when:
-        - matrix_enable | default(true)
-        - matrix_dump is succeeded
-      tags: [db-matrix]
-
     # ── Rotate old backups ──────────────────────────
     - name: Remove backups older than retention days
       find:

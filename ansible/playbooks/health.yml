@@ -34,19 +34,9 @@
       ignore_errors: yes
       register: health_gitlab
 
-    - name: Check Synapse
-      uri:
-        url: "https://{{ matrix_homeserver_name | default('matrix.' + domain) }}/_matrix/federation/v1/version"
-        method: GET
-        status_code: 200
-        validate_certs: no
-      ignore_errors: yes
-      register: health_synapse
-
     - name: Print health summary
       debug:
         msg: |
           Traefik:   {{ 'OK' if not health_traefik.failed else 'FAIL' }}
           Authentik: {{ 'OK' if not health_authentik.failed else 'FAIL' }}
           GitLab:    {{ 'OK' if not health_gitlab.failed else 'FAIL' }}
-          Synapse:   {{ 'OK' if not health_synapse.failed else 'FAIL' }}

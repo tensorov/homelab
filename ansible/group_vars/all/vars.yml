@@ -33,8 +33,6 @@ grafana_domain: "grafana.{{ domain }}"
 prometheus_domain: "prometheus.{{ domain }}"
 jupyter_domain: "jupyter.{{ domain }}"
 mirotalk_domain: "meet.{{ domain }}"
-matrix_homeserver_name: "matrix.{{ domain }}"
-element_domain: "chat.{{ domain }}"
 supabase_domain: "supabase.{{ domain }}"
 searxng_domain: "searxng.{{ domain }}"
 opencode_web_domain: "opencode.{{ domain }}"
@@ -55,11 +53,6 @@ smtp_enable: true
 jupyter_enable: false
 opencode_web_enable: false
 opencode_webhook_enable: false
-matrix_enable: true
-matrix_element_enable: true
-matrix_register_admin: false
-matrix_report_stats: false
-matrix_enable_registration: false
 supabase_enable: false
 supabase_check_health: false
 
@@ -71,6 +64,5 @@ backup_remote_enable: false  # set true + configure vault_restic_* to enable
 # ── Versions / misc ───────────────────────────────────
 searxng_theme: dark
 searxng_private: true
-element_theme: dark
 jupyter_admin_users: ["admin"]
 smtp_username: matrix

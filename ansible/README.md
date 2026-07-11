@@ -1,6 +1,6 @@
 # home-datacenter — Ansible Deployment
 
-Infrastructure-as-Code for `/opt/services/` — Traefik, Authentik, GitLab, Matrix,
+Infrastructure-as-Code for `/opt/services/` — Traefik, Authentik, GitLab,
 Supabase, and auxiliary services.
 
 ## Prerequisites
@@ -53,7 +53,6 @@ ansible/
 │   ├── traefik/                   # Reverse proxy (Traefik v3)
 │   ├── authentik/                 # Identity provider
 │   ├── gitlab/                    # Git & CI/CD
-│   ├── matrix/                    # Matrix/Synapse + Element + bridges
 │   ├── supabase/                  # Supabase (Postgres + Auth + Storage)
 │   └── services/                  # Auxiliary (SearXNG, MiroTalk, SMTP, Jupyter, etc.)
 └── playbooks/
@@ -87,7 +86,6 @@ ansible-playbook playbooks/deploy.yml --tags base,devops
 # Available tags:
 #   base          — traefik + authentik
 #   devops        — gitlab
-#   communication — matrix
 #   database      — supabase
 #   services      — searxng, mirotalk, smtp, jupyter, etc.
 ```

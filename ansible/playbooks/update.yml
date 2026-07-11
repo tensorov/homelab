@@ -1,6 +1,6 @@
 ---
 # update: pull latest images and restart stacks
-# Tags: --tags traefik,authentik,gitlab,matrix,services
+# Tags: --tags traefik,authentik,gitlab,services
 # Skip a service: ansible-playbook update.yml -e skip_traefik=true
 
 - name: Update all services
@@ -13,7 +13,6 @@
       - /opt/services/traefik
       - /opt/services/authentik
       - /opt/services/gitlab
-      - /opt/services/matrix
       - /opt/services/searxng
       - /opt/services/mirotalk
 

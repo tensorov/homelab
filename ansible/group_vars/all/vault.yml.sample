@@ -14,28 +14,27 @@ $ANSIBLE_VAULT;1.1;AES256
 # vault_supabase_anon_key:
 # vault_supabase_service_role_key:
 # vault_supabase_dashboard_password:
+# vault_supabase_dashboard_username:       # default: admin
 #
 # vault_authentik_secret_key:
 # vault_authentik_postgres_password:
 # vault_authentik_bootstrap_token:
+# vault_authentik_bootstrap_password:
+# vault_authentik_email_password:
 # vault_authentik_client_id:
 # vault_authentik_client_secret:
 #
 # vault_gitlab_root_password:
 # vault_gitlab_secret_key:
 # vault_gitlab_runner_token:
-#
-# vault_matrix_postgres_password:
-# vault_matrix_registration_shared_secret:
-# vault_matrix_macaroon_secret:
-# vault_matrix_form_secret:
-# vault_matrix_oidc_client_id:
-# vault_matrix_oidc_client_secret:
-# vault_matrix_syncv3_password:
-# vault_matrix_syncv3_secret:
-# vault_matrix_admin_password:
+# vault_gitlab_postgres_password:
+# vault_gitlab_smtp_password:
+# vault_gitlab_email_from:
+# vault_gitlab_email_reply_to:
+# vault_gitlab_oauth_client_secret:
 #
 # vault_smtp_password:
+# vault_smtp_user:
 #
 # vault_jupyter_postgres_password:
 # vault_jupyterhub_crypt_key:
@@ -49,6 +48,13 @@ $ANSIBLE_VAULT;1.1;AES256
 #
 # vault_opencode_web_oauth_client_id:
 # vault_opencode_web_oauth_client_secret:
+#
+# vault_pgadmin_email:
+# vault_pgadmin_password:
+#
+# ── Monitoring / notifications ───────────────────────
+# vault_telegram_bot_token:
+# vault_telegram_chat_id:
 #
 # vault_restic_password:
 #
