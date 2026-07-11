@@ -83,8 +83,8 @@ ansible-vault re-key group_vars/all/vault.yml
 
 ## CI/CD
 
-GitHub Actions запускает `ansible-lint`, `yamllint` и `ansible-playbook --syntax-check`
-на каждый push/PR, затрагивающий `ansible/`.
+GitHub Actions runs `ansible-lint`, `yamllint`, and `ansible-playbook --syntax-check`
+on every push/PR affecting `ansible/`.
 
 ## Pre-commit
 
@@ -92,24 +92,24 @@ GitHub Actions запускает `ansible-lint`, `yamllint` и `ansible-playboo
 pip install pre-commit && pre-commit install
 ```
 
-Установит хуки: ansible-lint, yamllint, trailing-whitespace, check-yaml, gitleaks.
+Installs hooks: ansible-lint, yamllint, trailing-whitespace, check-yaml, gitleaks.
 
 ## Backup
 
 ```bash
-# Локальный дамп всех БД
+# Local dump of all databases
 ansible-playbook playbooks/backup.yml
 
-# С restic remote sync (требует restic_repository + vault_restic_password)
+# With restic remote sync (requires restic_repository + vault_restic_password)
 ansible-playbook playbooks/backup.yml --tags remote
 ```
 
-Ротация: 30 daily + 12 monthly snapshots.
+Retention: 30 daily + 12 monthly snapshots.
 
-## Релизы
+## Releases
 
 ```bash
 git tag v0.2.0 && git push --tags
 ```
 
-Список версий: https://github.com/tensorov/homelab/releases
+Changelog: https://github.com/tensorov/homelab/releases
