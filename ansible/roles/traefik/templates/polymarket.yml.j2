@@ -21,7 +21,7 @@ http:
     polymarket-dashboard:
       rule: "Host(`polymarket.{{ domain }}`)"
       entryPoints:
-        - websecure
+        - web-secure
       middlewares:
         - polymarket-auth
       service: polymarket-dashboard-svc
@@ -31,7 +31,7 @@ http:
     polymarket-api:
       rule: "Host(`polymarket.{{ domain }}`) && PathPrefix(`/api`)"
       entryPoints:
-        - websecure
+        - web-secure
       service: polymarket-bot-svc
       tls:
         certResolver: default

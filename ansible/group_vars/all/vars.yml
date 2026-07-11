@@ -39,6 +39,15 @@ supabase_domain: "supabase.{{ domain }}"
 searxng_domain: "searxng.{{ domain }}"
 opencode_web_domain: "opencode.{{ domain }}"
 
+# ── Service directories ───────────────────────────────
+ansible_services:
+  - searxng
+  - mirotalk
+  - jupyter
+  - smtp
+  - opencode-webhook
+  - opencode-web
+
 # ── Service toggles ──────────────────────────────────
 searxng_enable: true
 mirotalk_enable: true

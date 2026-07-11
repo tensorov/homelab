@@ -15,7 +15,7 @@
       file:
         path: "{{ backup_dir }}"
         state: directory
-        mode: 0755
+        mode: '0755'
 
     # ── GitLab ──────────────────────────────────────
     - name: Dump GitLab DB
@@ -27,38 +27,56 @@
       register: gitlab_backup
       tags: [db-gitlab]
 
+    - name: Copy GitLab backup
+      shell:
+        cmd: |
+          set -o pipefail
+          latest=$(docker exec gitlab ls -t /var/opt/gitlab/backups/*.tar 2>/dev/null | head -1)
+          [ -n "$latest" ] && docker cp "gitlab:$latest" \
+            "{{ backup_dir }}/gitlab-{{ ts }}.tar"
+        executable: /bin/bash
+      changed_when: true
+      when:
+        - gitlab_enable | default(true)
+        - gitlab_backup is succeeded
+      tags: [db-gitlab]
+
     # ── Supabase ────────────────────────────────────
     - name: Dump Supabase DB
       community.docker.docker_container_exec:
-        container: supabase-db-1
-        command: pg_dump -U postgres --clean --if-exists -d postgres
+        container: supabase-db
+        command: pg_dump -U postgres --clean --if-exists -d postgres -f /tmp/supabase-dump.sql
       when: supabase_enable | default(true)
       ignore_errors: yes
       register: supabase_dump
       tags: [db-supabase]
 
     - name: Copy Supabase dump
-      shell: |
-        docker cp supabase-db-1:/tmp/supabase-dump.sql \
-          "{{ backup_dir }}/supabase-{{ ts }}.sql" || true
-      when: supabase_enable | default(true)
+      command:
+        cmd: docker cp supabase-db:/tmp/supabase-dump.sql "{{ backup_dir }}/supabase-{{ ts }}.sql"
+      changed_when: true
+      when:
+        - supabase_enable | default(true)
+        - supabase_dump is succeeded
       tags: [db-supabase]
 
     # ── Matrix ──────────────────────────────────────
     - name: Dump Matrix Synapse DB
       community.docker.docker_container_exec:
         container: matrix-db
-        command: pg_dump -U synapse --clean --if-exists -d synapse
+        command: pg_dump -U synapse --clean --if-exists -d synapse -f /tmp/synapse-dump.sql
       when: matrix_enable | default(true)
       ignore_errors: yes
       register: matrix_dump
       tags: [db-matrix]
 
     - name: Copy Matrix dump
-      shell: |
-        docker cp matrix-db:/tmp/synapse-dump.sql \
-          "{{ backup_dir }}/synapse-{{ ts }}.sql" || true
-      when: matrix_enable | default(true)
+      command:
+        cmd: docker cp matrix-db:/tmp/synapse-dump.sql "{{ backup_dir }}/synapse-{{ ts }}.sql"
+      changed_when: true
+      when:
+        - matrix_enable | default(true)
+        - matrix_dump is succeeded
       tags: [db-matrix]
 
     # ── Rotate old backups ──────────────────────────
@@ -82,6 +100,7 @@
     - name: Sync backup dir to remote (restic)
       command:
         cmd: "restic backup {{ backup_dir }} --tag homelab --tag {{ ts }}"
+      changed_when: true
       when:
         - backup_remote_enable | default(false)
         - restic_repository is defined
@@ -93,8 +112,8 @@
 
     - name: Forget old restic snapshots (retain 30 daily, 12 monthly)
       command:
-        cmd: |
-          restic forget --keep-daily 30 --keep-monthly 12 --prune
+        cmd: restic forget --keep-daily 30 --keep-monthly 12 --prune
+      changed_when: true
       when:
         - backup_remote_enable | default(false)
         - restic_repository is defined

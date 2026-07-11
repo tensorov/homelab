@@ -5,7 +5,7 @@
   file:
     path: "{{ item }}"
     state: directory
-    mode: 0755
+    mode: '0755'
   loop:
     - /opt/services/matrix/data/synapse
     - /opt/services/matrix/data/postgres
@@ -40,7 +40,7 @@
         })
     volumes:
       - /opt/services/matrix/data/synapse:/data
-  register: synapse_gen
+  register: matrix_synapse_gen
   changed_when: synapse_gen is changed
   when: matrix_generate_config | default(false)
 
@@ -48,21 +48,21 @@
   template:
     src: homeserver.yaml.j2
     dest: /opt/services/matrix/data/synapse/homeserver.yaml
-    mode: 0644
+    mode: '0644'
   notify: restart matrix
 
 - name: Deploy docker-compose.yml
   template:
     src: docker-compose.yml.j2
     dest: /opt/services/matrix/docker-compose.yml
-    mode: 0644
+    mode: '0644'
   notify: restart matrix
 
 - name: Deploy Element config
   template:
     src: element-config.json.j2
     dest: /opt/services/matrix/data/element/config.json
-    mode: 0644
+    mode: '0644'
   notify: restart matrix
   when: matrix_element_enable | default(true)
 
@@ -70,10 +70,10 @@
   template:
     src: upstream.conf.j2
     dest: /opt/services/matrix/upstream.conf
-    mode: 0644
+    mode: '0644'
 
 - name: Start Matrix stack
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /opt/services/matrix
     state: present
   register: matrix_output

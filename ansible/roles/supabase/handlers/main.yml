@@ -1,6 +1,5 @@
 ---
-- name: restart supabase
-  community.docker.docker_compose:
+- name: Restart supabase
+  community.docker.docker_compose_v2:
     project_src: /opt/services/ai/supabase/docker
-    state: present
-    restarted: true
+    state: restarted

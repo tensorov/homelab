@@ -1,0 +1,10 @@
+# Log rotation for homelab services — managed by Ansible
+/opt/services/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

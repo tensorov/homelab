@@ -1,6 +1,5 @@
 ---
-- name: restart matrix
-  community.docker.docker_compose:
+- name: Restart matrix
+  community.docker.docker_compose_v2:
     project_src: /opt/services/matrix
-    state: present
-    restarted: true
+    state: restarted

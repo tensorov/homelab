@@ -23,6 +23,7 @@ services:
       - POSTGRES_HOST=jupyter-postgresql
       - OAUTH_CLIENT_ID={{ vault_jupyter_oauth_client_id | default('') }}
       - OAUTH_CLIENT_SECRET={{ vault_jupyter_oauth_client_secret | default('') }}
+      - OAUTH_ISSUER=https://{{ authentik_domain | default('idp.' + domain) }}
       - OAUTH_CALLBACK_URL=https://{{ jupyter_domain | default('jupyter.' + domain) }}/hub/oauth_callback
       - JUPYTERHUB_CRYPT_KEY={{ vault_jupyterhub_crypt_key }}
     volumes:

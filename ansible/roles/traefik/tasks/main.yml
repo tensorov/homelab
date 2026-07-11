@@ -5,7 +5,7 @@
   file:
     path: "{{ item }}"
     state: directory
-    mode: 0755
+    mode: '0755'
   loop:
     - /opt/services/traefik
     - /opt/services/traefik/dynamic
@@ -16,28 +16,28 @@
   template:
     src: docker-compose.yml.j2
     dest: /opt/services/traefik/docker-compose.yml
-    mode: 0644
+    mode: '0644'
   notify: restart traefik
 
 - name: Deploy traefik static config
   template:
     src: traefik.yml.j2
     dest: /opt/services/traefik/traefik.yml
-    mode: 0644
+    mode: '0644'
   notify: restart traefik
 
 - name: Deploy dynamic config
   template:
     src: config.yml.j2
     dest: /opt/services/traefik/dynamic/config.yml
-    mode: 0644
+    mode: '0644'
   notify: restart traefik
 
 - name: Deploy service-specific dynamic configs
   template:
     src: "{{ item }}.j2"
     dest: "/opt/services/traefik/dynamic/{{ item }}"
-    mode: 0644
+    mode: '0644'
   loop:
     - amadeus-api.yml
     - amadeus-callback.yml
@@ -56,13 +56,12 @@
   template:
     src: env.j2
     dest: /opt/services/traefik/.env
-    mode: 0600
+    mode: '0600'
   no_log: true
   notify: restart traefik
 
 - name: Start Traefik
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /opt/services/traefik
-    state: present
-    restarted: "{{ traefik_force_restart | default(false) }}"
+    state: "{{ 'restarted' if traefik_force_restart | default(false) else 'present' }}"
   register: traefik_output

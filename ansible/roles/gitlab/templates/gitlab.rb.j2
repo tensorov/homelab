@@ -1,0 +1,44 @@
+# GitLab configuration file — managed by Ansible
+# See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template
+
+external_url "https://{{ gitlab_domain | default('gitlab.' + domain) }}"
+
+# ── TLS ──────────────────────────────────────────────
+letsencrypt['enable'] = false
+nginx['ssl_certificate'] = "/etc/gitlab/ssl/fullchain.pem"
+nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/privkey.pem"
+nginx['redirect_http_to_https'] = true
+
+# ── Postgres ─────────────────────────────────────────
+postgresql['enable'] = true
+postgresql['shared_buffers'] = "{{ gitlab_pgbuffers | default('256MB') }}"
+
+# ── Redis ────────────────────────────────────────────
+redis['enable'] = true
+
+# ── Registry ─────────────────────────────────────────
+registry_external_url "https://{{ gitlab_registry_domain | default('registry.' + domain) }}"
+registry['enable'] = true
+
+# ── GitLab Runner ────────────────────────────────────
+gitlab_rails['gitlab_default_can_create_group'] = false
+gitlab_rails['gitlab_username_changing_grace_period'] = false
+gitlab_rails['gitlab_prometheus_exporter_enabled'] = false
+
+# ── Backups ──────────────────────────────────────────
+gitlab_rails['backup_keep_time'] = 604800  # 7 days
+gitlab_rails['backup_path'] = "/var/opt/gitlab/backups"
+
+# ── Email ────────────────────────────────────────────
+gitlab_rails['smtp_enable'] = {{ gitlab_smtp_enable | default('false') }}
+{% if gitlab_smtp_enable | default(false) %}
+gitlab_rails['smtp_address'] = "{{ gitlab_smtp_address }}"
+gitlab_rails['smtp_port'] = {{ gitlab_smtp_port | default(587) }}
+gitlab_rails['smtp_user_name'] = "{{ gitlab_smtp_user }}"
+gitlab_rails['smtp_password'] = "{{ vault_gitlab_smtp_password }}"
+gitlab_rails['smtp_domain'] = "{{ domain }}"
+gitlab_rails['smtp_authentication'] = "login"
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['gitlab_email_from'] = "{{ vault_gitlab_email_from }}"
+gitlab_rails['gitlab_email_reply_to'] = "{{ vault_gitlab_email_reply_to }}"
+{% endif %}

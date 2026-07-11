@@ -35,7 +35,7 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: {{ vault_supabase_service_role_key }}
       AUTH_ENDPOINT: /auth/v1
       AUTH_EXTERNAL_ENABLED: "true"
-      AUTH_EXTERRAL_GITHUB_ENABLED: "false"
+      AUTH_EXTERNAL_GITHUB_ENABLED: "false"
 
   kong:
     image: kong:2.8.1
@@ -108,6 +108,7 @@ services:
 
   db:
     image: supabase/postgres:{{ supabase_pg_version | default('15.6.1.122') }}
+    container_name: supabase-db
     restart: unless-stopped
     healthcheck:
       test: pg_isready -U supabase_admin -d postgres

@@ -5,13 +5,13 @@
   file:
     path: /opt/services/authentik
     state: directory
-    mode: 0755
+    mode: '0755'
 
 - name: Deploy .env (vaulted)
   template:
     src: env.j2
     dest: /opt/services/authentik/.env
-    mode: 0600
+    mode: '0600'
   no_log: true
   notify: restart authentik
 
@@ -19,18 +19,18 @@
   copy:
     src: nginx-static.conf
     dest: /opt/services/authentik/nginx-static.conf
-    mode: 0644
+    mode: '0644'
   notify: restart authentik
 
 - name: Deploy docker-compose.yml
   template:
     src: docker-compose.yml.j2
     dest: /opt/services/authentik/docker-compose.yml
-    mode: 0644
+    mode: '0644'
   notify: restart authentik
 
 - name: Start Authentik
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /opt/services/authentik
     state: present
   register: authentik_output

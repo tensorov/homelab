@@ -1,6 +1,5 @@
 ---
-- name: restart gitlab
-  community.docker.docker_compose:
+- name: Restart gitlab
+  community.docker.docker_compose_v2:
     project_src: /opt/services/gitlab
-    state: present
-    restarted: true
+    state: restarted

@@ -19,16 +19,15 @@
 
   tasks:
     - name: Pull latest images
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ item }}"
-        pull: true
+        pull: always
       loop: "{{ stacks }}"
       when: not (lookup('vars', 'skip_' + item.split('/')[-1], default=false) | bool)
 
     - name: Restart stack
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ item }}"
-        state: present
-        restarted: true
+        state: restarted
       loop: "{{ stacks }}"
       when: not (lookup('vars', 'skip_' + item.split('/')[-1], default=false) | bool)

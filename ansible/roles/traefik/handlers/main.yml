@@ -1,6 +1,5 @@
 ---
-- name: restart traefik
-  community.docker.docker_compose:
+- name: Restart traefik
+  community.docker.docker_compose_v2:
     project_src: /opt/services/traefik
-    state: present
-    restarted: true
+    state: restarted

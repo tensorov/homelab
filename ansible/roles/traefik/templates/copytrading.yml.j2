@@ -3,7 +3,7 @@ http:
     copytrading-dashboard:
       rule: "Host(`copytrader-alpha.{{ domain }}`)"
       entryPoints:
-        - websecure
+        - web-secure
       service: copytrading-dashboard
       tls:
         certResolver: default
