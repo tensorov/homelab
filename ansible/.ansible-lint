@@ -1,0 +1,24 @@
+---
+# ansible-lint configuration
+offline: true
+skip_list:
+  - fqcn-builtins  # allow ansible.builtin. prefix
+  - role-name      # allow single-word role names
+  - name[casing]   # allow lowercase task names
+  - ignore-errors  # some tasks intentionally ignore errors
+
+warn_list:
+  - command-instead-of-module
+  - no-changed-when
+  - unnamed-task
+
+exclude_paths:
+  - .git/
+  - .github/
+
+# Only lint our own roles, not galaxy content
+mock_modules: []
+mock_roles: []
+
+loop_var_extensions:
+  - item

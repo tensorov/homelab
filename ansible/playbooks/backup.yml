@@ -1,48 +1,105 @@
 ---
-# backup: stop DB services, snapshot volumes, restart
-# Requires: restic or borg installed on host
+# backup: database dumps + restic remote sync
+# Run manually or trigged by deploy.yml pre_tasks.
+# Requires: restic installed on host (for remote sync)
 
 - name: Backup databases
   hosts: all
   become: yes
-  gather_facts: no
+  gather_facts: yes
+  vars:
+    ts: "{{ ansible_date_time.date }}-{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
 
   tasks:
     - name: Ensure backup directory exists
       file:
-        path: "{{ backup_dir | default('/opt/services/backups') }}"
+        path: "{{ backup_dir }}"
         state: directory
         mode: 0755
 
+    # ── GitLab ──────────────────────────────────────
     - name: Dump GitLab DB
       community.docker.docker_container_exec:
         container: gitlab
         command: gitlab-backup create
       when: gitlab_enable | default(true)
       ignore_errors: yes
+      register: gitlab_backup
+      tags: [db-gitlab]
 
+    # ── Supabase ────────────────────────────────────
     - name: Dump Supabase DB
       community.docker.docker_container_exec:
         container: supabase-db-1
-        command: pg_dump -U postgres -d postgres > /tmp/supabase-dump.sql
+        command: pg_dump -U postgres --clean --if-exists -d postgres
       when: supabase_enable | default(true)
       ignore_errors: yes
+      register: supabase_dump
+      tags: [db-supabase]
 
-    - name: Dump Matrix DB
+    - name: Copy Supabase dump
+      shell: |
+        docker cp supabase-db-1:/tmp/supabase-dump.sql \
+          "{{ backup_dir }}/supabase-{{ ts }}.sql" || true
+      when: supabase_enable | default(true)
+      tags: [db-supabase]
+
+    # ── Matrix ──────────────────────────────────────
+    - name: Dump Matrix Synapse DB
       community.docker.docker_container_exec:
         container: matrix-db
-        command: pg_dump -U synapse -d synapse > /tmp/synapse-dump.sql
+        command: pg_dump -U synapse --clean --if-exists -d synapse
       when: matrix_enable | default(true)
       ignore_errors: yes
+      register: matrix_dump
+      tags: [db-matrix]
 
-    - name: Copy dumps to backup dir
+    - name: Copy Matrix dump
       shell: |
-        docker cp matrix-db:/tmp/synapse-dump.sql {{ backup_dir | default('/opt/services/backups') }}/synapse-{{ ansible_date_time.date }}.sql || true
-        docker cp supabase-db-1:/tmp/supabase-dump.sql {{ backup_dir | default('/opt/services/backups') }}/supabase-{{ ansible_date_time.date }}.sql || true
+        docker cp matrix-db:/tmp/synapse-dump.sql \
+          "{{ backup_dir }}/synapse-{{ ts }}.sql" || true
+      when: matrix_enable | default(true)
+      tags: [db-matrix]
 
-    - name: Sync to remote (restic)
-      command: restic backup {{ backup_dir | default('/opt/services/backups') }}
-      when: restic_repository is defined
+    # ── Rotate old backups ──────────────────────────
+    - name: Remove backups older than retention days
+      find:
+        paths: "{{ backup_dir }}"
+        patterns: "*.sql,*.dump,*.tar"
+        age: "{{ backup_retention_days }}d"
+      register: old_backups
+      tags: [cleanup]
+
+    - name: Delete old backup files
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_backups.files }}"
+      when: old_backups.files | length > 0
+      tags: [cleanup]
+
+    # ── Restic remote sync ──────────────────────────
+    - name: Sync backup dir to remote (restic)
+      command:
+        cmd: "restic backup {{ backup_dir }} --tag homelab --tag {{ ts }}"
+      when:
+        - backup_remote_enable | default(false)
+        - restic_repository is defined
+        - vault_restic_password is defined
       environment:
         RESTIC_REPOSITORY: "{{ restic_repository }}"
         RESTIC_PASSWORD: "{{ vault_restic_password }}"
+      tags: [remote]
+
+    - name: Forget old restic snapshots (retain 30 daily, 12 monthly)
+      command:
+        cmd: |
+          restic forget --keep-daily 30 --keep-monthly 12 --prune
+      when:
+        - backup_remote_enable | default(false)
+        - restic_repository is defined
+        - vault_restic_password is defined
+      environment:
+        RESTIC_REPOSITORY: "{{ restic_repository }}"
+        RESTIC_PASSWORD: "{{ vault_restic_password }}"
+      tags: [remote]

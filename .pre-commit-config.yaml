@@ -1,0 +1,35 @@
+---
+repos:
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v25.1.0
+    hooks:
+      - id: ansible-lint
+        args: [--config-file, ansible/.ansible-lint]
+        files: ^ansible/
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict, -c, ansible/.yamllint]
+        files: ^ansible/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        exclude: \.j2$
+      - id: check-yaml
+        exclude: \.j2$
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+        exclude: \.pub$
+
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.24.0
+    hooks:
+      - id: gitleaks
+        args: [--verbose]
