@@ -1,0 +1,55 @@
+---
+# restore: restore databases from backup dumps
+# Usage: ansible-playbook restore.yml -e "backup_file=/opt/services/backups/synapse-2026-07-11.sql"
+
+- name: Restore databases
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Fail if no backup_file specified
+      fail:
+        msg: "Usage: ansible-playbook restore.yml -e 'backup_file=/path/to/dump.sql' -e 'service=matrix'"
+      when: backup_file is not defined or service is not defined
+
+    - name: Restore Matrix Synapse DB
+      when: service == "matrix"
+      block:
+        - name: Copy dump into container
+          command:
+            cmd: "docker cp {{ backup_file }} matrix-db:/tmp/restore.sql"
+
+        - name: Drop and recreate synapse DB
+          community.docker.docker_container_exec:
+            container: matrix-db
+            command: psql -U synapse -c 'DROP DATABASE IF EXISTS synapse; CREATE DATABASE synapse;'
+
+        - name: Restore from dump
+          community.docker.docker_container_exec:
+            container: matrix-db
+            command: psql -U synapse -d synapse -f /tmp/restore.sql
+
+    - name: Restore Supabase DB
+      when: service == "supabase"
+      block:
+        - name: Copy dump into container
+          command:
+            cmd: "docker cp {{ backup_file }} supabase-db-1:/tmp/restore.sql"
+
+        - name: Drop and recreate postgres DB
+          community.docker.docker_container_exec:
+            container: supabase-db-1
+            command: psql -U postgres -c 'DROP DATABASE IF EXISTS postgres; CREATE DATABASE postgres;'
+
+        - name: Restore from dump
+          community.docker.docker_container_exec:
+            container: supabase-db-1
+            command: psql -U postgres -d postgres -f /tmp/restore.sql
+
+    - name: Restore GitLab
+      when: service == "gitlab"
+      community.docker.docker_container_exec:
+        container: gitlab
+        command: gitlab-backup restore BACKUP={{ backup_file | basename | replace('_gitlab_backup.tar', '') }}
+      ignore_errors: yes

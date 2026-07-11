@@ -1,0 +1,27 @@
+---
+# notify/telegram.yml — send deploy notification via Telegram
+# Include in deploy.yml post_tasks:
+#   - import_tasks: notify/telegram.yml
+#     vars:
+#       notify_status: "{{ 'SUCCESS' if result is not failed else 'FAILURE' }}"
+# Requires vault_telegram_bot_token and vault_telegram_chat_id.
+
+- name: Send Telegram notification
+  uri:
+    url: "https://api.telegram.org/bot{{ vault_telegram_bot_token }}/sendMessage"
+    method: POST
+    body_format: json
+    body:
+      chat_id: "{{ vault_telegram_chat_id }}"
+      text: |-
+        {{ notify_emoji }} *home-datacenter* — deploy {{ notify_status }}
+
+        Playbook: `{{ ansible_play_name }}`
+        Host: `{{ ansible_hostname }}`
+        Date: `{{ ansible_date_time.iso8601 }}`
+        User: `{{ lookup('env', 'USER') | default('unknown') }}`
+      parse_mode: Markdown
+    status_code: 200
+  ignore_errors: yes
+  vars:
+    notify_emoji: "{{ '✅' if notify_status == 'SUCCESS' else '❌' }}"

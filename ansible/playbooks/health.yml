@@ -14,6 +14,7 @@
         status_code: 200
         validate_certs: no
       ignore_errors: yes
+      register: health_traefik
 
     - name: Check Authentik
       uri:
@@ -22,14 +23,16 @@
         status_code: 200
         validate_certs: no
       ignore_errors: yes
+      register: health_authentik
 
     - name: Check GitLab
       uri:
-        url: "https://{{ gitlab_domain | default('git.' + domain) }}/-/health"
+        url: "https://{{ gitlab_domain | default('gitlab.' + domain) }}/-/health"
         method: GET
         status_code: 200
         validate_certs: no
       ignore_errors: yes
+      register: health_gitlab
 
     - name: Check Synapse
       uri:
@@ -38,11 +41,12 @@
         status_code: 200
         validate_certs: no
       ignore_errors: yes
+      register: health_synapse
 
     - name: Print health summary
       debug:
         msg: |
-          Traefik:   {{ 'OK' if not traefik_check.failed else 'FAIL' }}
-          Authentik: {{ 'OK' if not authentik_check.failed else 'FAIL' }}
-          GitLab:    {{ 'OK' if not gitlab_check.failed else 'FAIL' }}
-          Synapse:   {{ 'OK' if not synapse_check.failed else 'FAIL' }}
+          Traefik:   {{ 'OK' if not health_traefik.failed else 'FAIL' }}
+          Authentik: {{ 'OK' if not health_authentik.failed else 'FAIL' }}
+          GitLab:    {{ 'OK' if not health_gitlab.failed else 'FAIL' }}
+          Synapse:   {{ 'OK' if not health_synapse.failed else 'FAIL' }}

@@ -3,11 +3,11 @@ name: lint
 
 on:
   push:
-    branches: [master]
-    paths: ["ansible/**", ".github/workflows/lint.yml"]
+    branches: [main]
+    paths: ["ansible/**", ".github/workflows/lint.yml", "Makefile", ".pre-commit-config.yaml"]
   pull_request:
-    branches: [master]
-    paths: ["ansible/**"]
+    branches: [main]
+    paths: ["ansible/**", ".github/workflows/lint.yml", "Makefile", ".pre-commit-config.yaml"]
 
 concurrency:
   group: lint-${{ github.ref }}
@@ -28,10 +28,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Ansible & tools
+      - name: Install tools
         run: |
           pip install --upgrade pip
-          pip install ansible-core==2.18.3 ansible-lint yamllint
+          pip install ansible-core==2.18.3 ansible-lint yamllint pre-commit
           ansible-galaxy collection install community.docker community.general
 
       - name: yamllint
@@ -47,10 +47,25 @@ jobs:
             ansible-playbook --syntax-check "$pb"
           done
 
-      - name: Validate vault sample is not real vault
+      - name: pre-commit (ansible-focused)
+        run: |
+          cd "${{ github.workspace }}"
+          pre-commit run --all-files --show-diff-on-failure
+
+      - name: shellcheck
+        run: |
+          sh_files=$(find ../roles -name '*.sh' 2>/dev/null || true)
+          if [ -n "$sh_files" ]; then
+            apt-get update -qq && apt-get install -y -qq shellcheck
+            shellcheck $sh_files
+          else
+            echo "No shell scripts found, skipping shellcheck"
+          fi
+
+      - name: Validate vault sample
         run: |
           if grep -q '^\$ANSIBLE_VAULT' group_vars/all/vault.yml.sample 2>/dev/null; then
-            echo "❌ vault.yml.sample contains real encrypted data!"
+            echo "vault.yml.sample contains real encrypted data!"
             exit 1
           fi
-          echo "✅ vault.yml.sample is safe"
+          echo "vault.yml.sample is safe"

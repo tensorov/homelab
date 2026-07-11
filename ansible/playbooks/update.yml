@@ -1,35 +1,34 @@
 ---
 # update: pull latest images and restart stacks
 # Tags: --tags traefik,authentik,gitlab,matrix,services
+# Skip a service: ansible-playbook update.yml -e skip_traefik=true
 
 - name: Update all services
   hosts: all
   become: yes
   gather_facts: no
 
+  vars:
+    stacks:
+      - /opt/services/traefik
+      - /opt/services/authentik
+      - /opt/services/gitlab
+      - /opt/services/matrix
+      - /opt/services/searxng
+      - /opt/services/mirotalk
+
   tasks:
     - name: Pull latest images
       community.docker.docker_compose:
         project_src: "{{ item }}"
         pull: true
-      loop:
-        - /opt/services/traefik
-        - /opt/services/authentik
-        - /opt/services/gitlab
-        - /opt/services/matrix
-        - /opt/services/searxng
-        - /opt/services/mirotalk
-      when: "{{ 'skip_' + item.split('/')[-1] | default(false) }}"
+      loop: "{{ stacks }}"
+      when: not (lookup('vars', 'skip_' + item.split('/')[-1], default=false) | bool)
 
     - name: Restart stack
       community.docker.docker_compose:
         project_src: "{{ item }}"
         state: present
         restarted: true
-      loop:
-        - /opt/services/traefik
-        - /opt/services/authentik
-        - /opt/services/gitlab
-        - /opt/services/matrix
-        - /opt/services/searxng
-        - /opt/services/mirotalk
+      loop: "{{ stacks }}"
+      when: not (lookup('vars', 'skip_' + item.split('/')[-1], default=false) | bool)

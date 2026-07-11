@@ -1,0 +1,20 @@
+---
+- name: Verify common role
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Check Docker is installed
+      command: docker --version
+      changed_when: no
+
+    - name: Check UFW is active
+      command: ufw status
+      changed_when: no
+
+    - name: Check required sysctl params
+      command: sysctl net.ipv4.ip_forward
+      changed_when: no
+      register: ip_forward
+      failed_when: "'net.ipv4.ip_forward = 1' not in ip_forward.stdout"

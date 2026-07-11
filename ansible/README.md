@@ -1,95 +1,145 @@
 # home-datacenter — Ansible Deployment
-# =====================================
 
 Infrastructure-as-Code for `/opt/services/` — Traefik, Authentik, GitLab, Matrix,
 Supabase, and auxiliary services.
 
+## Prerequisites
+
+- Python 3.12+ with pip
+- Ansible Core 2.18+, ansible-lint, yamllint
+- Collections: `community.docker`, `community.general`
+
+```bash
+pip install ansible-core ansible-lint yamllint pre-commit
+ansible-galaxy collection install community.docker community.general
+```
+
 ## Quick Start
 
 ```bash
-# 1. Edit inventory
-vi inventory.yml
+cd ansible
 
-# 2. Edit variables (especially domains)
-vi group_vars/all/vars.yml
-
-# 3. Set vault password
+# 1. Set vault password
 echo "your-secret" > vault-password
 chmod 600 vault-password
 
-# 4. Encrypt secrets
+# 2. Encrypt secrets from vault.yml.sample
 ansible-vault encrypt group_vars/all/vault.yml
 
-# 5. Bootstrap (first run on a fresh host)
+# 3. Bootstrap (first run on a fresh host)
 ansible-playbook playbooks/bootstrap.yml
 
-# 6. Deploy full stack
+# 4. Deploy full stack
 ansible-playbook playbooks/deploy.yml
-
-# 7. Or deploy specific roles
-ansible-playbook playbooks/deploy.yml --tags traefik,authentik
 ```
 
 ## Structure
 
 ```
 ansible/
-├── ansible.cfg              # Ansible configuration
-├── inventory.yml             # Host inventory
-├── requirements.yml          # Galaxy dependencies
-├── vault-password            # Vault password file (gitignored)
-├── group_vars/
-│   └── all/
-│       ├── vars.yml          # All non-secret variables
-│       └── vault.yml         # Encrypted secrets (ansible-vault)
-├── host_vars/                # Per-host overrides
+├── ansible.cfg                    # Ansible configuration
+├── .ansible-lint                  # ansible-lint config
+├── .yamllint                      # yamllint config
+├── requirements.yml               # Galaxy dependencies
+├── vault-password                 # Vault password file (gitignored)
+├── group_vars/all/
+│   ├── vars.yml                   # Non-secret variables
+│   └── vault.yml                  # Encrypted secrets (ansible-vault)
+├── inventories/
+│   ├── production/hosts.yml       # Production inventory
+│   └── staging/                   # Staging environment
 ├── roles/
-│   ├── common/               # Base setup (required first)
-│   ├── traefik/              # Reverse proxy (Traefik v3)
-│   ├── authentik/             # Identity provider
-│   ├── gitlab/                # Git & CI/CD
-│   ├── matrix/                # Matrix/Synapse + Element + bridges
-│   ├── supabase/              # Supabase (Postgres + Auth + Storage)
-│   └── services/              # Auxiliary (SearXNG, MiroTalk, SMTP, Jupyter, etc.)
+│   ├── common/                    # Base: packages, Docker, UFW, sysctl
+│   ├── traefik/                   # Reverse proxy (Traefik v3)
+│   ├── authentik/                 # Identity provider
+│   ├── gitlab/                    # Git & CI/CD
+│   ├── matrix/                    # Matrix/Synapse + Element + bridges
+│   ├── supabase/                  # Supabase (Postgres + Auth + Storage)
+│   └── services/                  # Auxiliary (SearXNG, MiroTalk, SMTP, Jupyter, etc.)
 └── playbooks/
-    ├── bootstrap.yml          # Initial server provisioning
-    ├── deploy.yml             # Full stack deployment
-    ├── update.yml             # Pull latest images + restart
-    ├── backup.yml             # Database backups
-    └── health.yml             # Health checks
+    ├── bootstrap.yml              # Initial server provisioning
+    ├── deploy.yml                 # Full stack deployment (tag-selectable)
+    ├── update.yml                 # Pull latest images + restart
+    ├── backup.yml                 # Database dumps + restic remote sync
+    ├── restore.yml                # Restore databases from backup
+    ├── rotate-secrets.yml         # Rotate vault + service secrets
+    └── health.yml                 # Health check all services
 ```
+
+## Playbooks
+
+| Playbook | Description |
+|----------|-------------|
+| `bootstrap.yml` | Initial provisioning (common role) |
+| `deploy.yml` | Full stack deployment, tag-selectable |
+| `update.yml` | Pull latest images + restart stacks |
+| `backup.yml` | Database dumps + restic remote sync |
+| `restore.yml` | Restore databases from dumps |
+| `rotate-secrets.yml` | Rotate ansible-vault and service secrets |
+| `health.yml` | HTTP health checks for all services |
 
 ## Tags
 
 ```bash
-# Available tags (from deploy.yml):
+# Deploy specific groups
+ansible-playbook playbooks/deploy.yml --tags base,devops
+
+# Available tags:
 #   base          — traefik + authentik
 #   devops        — gitlab
 #   communication — matrix
 #   database      — supabase
-#   services      — auxiliary services (searxng, mirotalk, etc.)
-
-ansible-playbook playbooks/deploy.yml --tags database
+#   services      — searxng, mirotalk, smtp, jupyter, etc.
 ```
 
 ## Vault
 
-Secrets are encrypted with `ansible-vault`:
+Secrets use `ansible-vault`:
 
 ```bash
-# Edit vault
-ansible-vault edit group_vars/all/vault.yml
-
-# View
 ansible-vault view group_vars/all/vault.yml
-
-# Re-key (change password)
+ansible-vault edit group_vars/all/vault.yml
 ansible-vault re-key group_vars/all/vault.yml
 ```
 
+Vault password file (`vault-password`) is gitignored. For teams, use `gpg` or a password
+manager instead of a plain file.
+
+## Makefile
+
+Common operations:
+
+```bash
+make lint       # Run all linters (ansible-lint, yamllint, shellcheck)
+make deploy     # ansible-playbook playbooks/deploy.yml
+make backup     # ansible-playbook playbooks/backup.yml
+make update     # ansible-playbook playbooks/update.yml
+make health     # ansible-playbook playbooks/health.yml
+```
+
+## CI
+
+GitHub Actions (`.github/workflows/lint.yml`) runs on every push/PR:
+
+- `ansible-lint` — Ansible best practices
+- `yamllint` — YAML style
+- `ansible-playbook --syntax-check` — all playbooks
+- `pre-commit run --all-files` — all pre-commit hooks
+- `shellcheck` — shell scripts in roles
+
+## Pre-commit
+
+```bash
+pre-commit install
+```
+
+Hooks: ansible-lint, yamllint, trailing-whitespace, end-of-file-fixer,
+check-yaml, check-json, detect-private-key, gitleaks.
+
 ## Traefik Dynamic Config
 
-Additional Traefik middleware and router configurations are deployed via the Traefik role.
-Each service under `/opt/services/` gets Traefik labels in its docker-compose.yml.
+Service-specific Traefik middleware and router configurations are deployed
+via the Traefik role. Each service under `/opt/services/` gets Traefik labels
+in its docker-compose.yml.
 
 See `roles/traefik/templates/` for current dynamic config templates.
