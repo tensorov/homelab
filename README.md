@@ -7,28 +7,33 @@ Ansible-managed deployment for `/opt/services/`.
 ## Structure
 
 ```
+.github/workflows/lint.yml    # CI — ansible-lint + yamllint на push/PR
+.pre-commit-config.yaml        # pre-commit хуки
 ansible/
 ├── ansible.cfg
-├── inventory.yml
+├── .ansible-lint              # ansible-lint конфиг
+├── .yamllint                  # yamllint конфиг
 ├── requirements.yml
-├── vault-password           # vault password file (gitignored)
+├── vault-password             # vault password (gitignored)
 ├── group_vars/all/
-│   ├── vars.yml             # non-secret variables
-│   └── vault.yml            # encrypted secrets (ansible-vault)
+│   ├── vars.yml               # non-secret variables
+│   └── vault.yml              # encrypted secrets (ansible-vault)
+├── inventories/
+│   └── production/hosts.yml   # production inventory
 ├── roles/
-│   ├── common/              # base: packages, Docker, UFW, sysctl
-│   ├── traefik/             # reverse proxy with 17+ dynamic config templates
-│   ├── authentik/           # identity provider (server + worker + postgres + redis)
-│   ├── gitlab/              # git + CI/CD (ce + postgres + redis + runner)
-│   ├── matrix/              # synapse + element + sliding-sync + bridges
-│   ├── supabase/            # postgres + auth + storage + realtime
-│   └── services/            # searxng, mirotalk, jupyter, smtp, opencode-webhook, opencode-web
+│   ├── common/                # base: packages, Docker, UFW, sysctl
+│   ├── traefik/               # reverse proxy with 17+ dynamic config templates
+│   ├── authentik/             # identity provider (server + worker + postgres + redis)
+│   ├── gitlab/                # git + CI/CD (ce + postgres + redis + runner)
+│   ├── matrix/                # synapse + element + sliding-sync + bridges
+│   ├── supabase/              # postgres + auth + storage + realtime
+│   └── services/              # searxng, mirotalk, jupyter, smtp, opencode-webhook, opencode-web
 └── playbooks/
-    ├── bootstrap.yml        # initial provisioning
-    ├── deploy.yml           # full stack deployment (tag-selectable)
-    ├── update.yml           # pull latest images + restart
-    ├── backup.yml           # database dumps
-    └── health.yml           # health checks
+    ├── bootstrap.yml          # initial provisioning
+    ├── deploy.yml             # full stack deployment (tag-selectable)
+    ├── update.yml             # pull latest images + restart
+    ├── backup.yml             # database dumps + restic remote sync
+    └── health.yml             # health checks
 ```
 
 ## Quick Start
@@ -36,21 +41,17 @@ ansible/
 ```bash
 cd ansible
 
-# 1. Edit inventory and variables
-vi inventory.yml
-vi group_vars/all/vars.yml
-
-# 2. Set vault password
+# 1. Set vault password
 echo "your-secret" > vault-password
 chmod 600 vault-password
 
-# 3. Encrypt secrets from vault.yml.sample
+# 2. Encrypt secrets from vault.yml.sample
 ansible-vault encrypt group_vars/all/vault.yml
 
-# 4. Bootstrap (first run on a fresh host)
+# 3. Bootstrap (first run on a fresh host)
 ansible-playbook playbooks/bootstrap.yml
 
-# 5. Deploy full stack
+# 4. Deploy full stack
 ansible-playbook playbooks/deploy.yml
 ```
 
@@ -79,3 +80,36 @@ ansible-vault view group_vars/all/vault.yml
 ansible-vault edit group_vars/all/vault.yml
 ansible-vault re-key group_vars/all/vault.yml
 ```
+
+## CI/CD
+
+GitHub Actions запускает `ansible-lint`, `yamllint` и `ansible-playbook --syntax-check`
+на каждый push/PR, затрагивающий `ansible/`.
+
+## Pre-commit
+
+```bash
+pip install pre-commit && pre-commit install
+```
+
+Установит хуки: ansible-lint, yamllint, trailing-whitespace, check-yaml, gitleaks.
+
+## Backup
+
+```bash
+# Локальный дамп всех БД
+ansible-playbook playbooks/backup.yml
+
+# С restic remote sync (требует restic_repository + vault_restic_password)
+ansible-playbook playbooks/backup.yml --tags remote
+```
+
+Ротация: 30 daily + 12 monthly snapshots.
+
+## Релизы
+
+```bash
+git tag v0.2.0 && git push --tags
+```
+
+Список версий: https://github.com/tensorov/homelab/releases
