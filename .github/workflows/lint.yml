@@ -1,0 +1,56 @@
+---
+name: lint
+
+on:
+  push:
+    branches: [master]
+    paths: ["ansible/**", ".github/workflows/lint.yml"]
+  pull_request:
+    branches: [master]
+    paths: ["ansible/**"]
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible & tools
+        run: |
+          pip install --upgrade pip
+          pip install ansible-core==2.18.3 ansible-lint yamllint
+          ansible-galaxy collection install community.docker community.general
+
+      - name: yamllint
+        run: yamllint --strict .
+
+      - name: ansible-lint
+        run: ansible-lint --config-file .ansible-lint .
+
+      - name: ansible-playbook syntax check
+        run: |
+          for pb in playbooks/*.yml; do
+            echo "=== $pb ==="
+            ansible-playbook --syntax-check "$pb"
+          done
+
+      - name: Validate vault sample is not real vault
+        run: |
+          if grep -q '^\$ANSIBLE_VAULT' group_vars/all/vault.yml.sample 2>/dev/null; then
+            echo "❌ vault.yml.sample contains real encrypted data!"
+            exit 1
+          fi
+          echo "✅ vault.yml.sample is safe"

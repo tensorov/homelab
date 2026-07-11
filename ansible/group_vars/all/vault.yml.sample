@@ -35,9 +35,6 @@ $ANSIBLE_VAULT;1.1;AES256
 # vault_matrix_syncv3_secret:
 # vault_matrix_admin_password:
 #
-# vault_grafana_admin_password:
-# vault_grafana_secret_key:
-#
 # vault_smtp_password:
 #
 # vault_jupyter_postgres_password:
@@ -54,6 +51,9 @@ $ANSIBLE_VAULT;1.1;AES256
 # vault_opencode_web_oauth_client_secret:
 #
 # vault_restic_password:
+#
+# Backup remote (required for restic sync):
+# restic_repository: s3:https://s3.eu-central-003.backblazeb2.com/your-bucket/homelab
 
 # Example encrypted value (replace):
 # vault_supabase_postgres_password: !vault |

@@ -54,6 +54,11 @@ matrix_enable_registration: false
 supabase_enable: false
 supabase_check_health: false
 
+# ── Backup ─────────────────────────────────────────────
+backup_dir: /opt/services/backups
+backup_retention_days: 30
+backup_remote_enable: false  # set true + configure vault_restic_* to enable
+
 # ── Versions / misc ───────────────────────────────────
 searxng_theme: dark
 searxng_private: true
