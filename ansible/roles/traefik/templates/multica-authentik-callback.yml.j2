@@ -1,0 +1,17 @@
+http:
+  routers:
+    multica-callback:
+      rule: "Host(`multica.{{ domain }}`) && PathPrefix(`/outpost.goauthentik.io`)"
+      entryPoints:
+        - web-secure
+      service: authentik-server-svc
+      tls:
+        certResolver: default
+      priority: 300
+
+  services:
+    authentik-server-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authentik-server:9000"
+        passHostHeader: true

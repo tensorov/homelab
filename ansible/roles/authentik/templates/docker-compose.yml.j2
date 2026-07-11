@@ -1,0 +1,125 @@
+version: "3.8"
+
+services:
+  postgresql:
+    image: postgres:{{ authentik_postgres_version }}
+    container_name: authentik-postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - authentik_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - traefik
+
+  redis:
+    image: redis:{{ authentik_redis_version }}
+    container_name: authentik-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - authentik_redis_data:/data
+    networks:
+      - traefik
+
+  authentik-static:
+    image: nginx:alpine
+    container_name: authentik-static
+    volumes:
+      - authentik_media:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik-static.rule=Host(`{{ authentik_domain | default('idp.' + domain) }}`) && PathPrefix(`/public-assets/`)"
+      - "traefik.http.routers.authentik-static.entrypoints=web-secure"
+      - "traefik.http.routers.authentik-static.tls=true"
+      - "traefik.http.routers.authentik-static.tls.certresolver=default"
+      - "traefik.http.services.authentik-static.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.authentik-static-stripprefix.stripprefix.prefixes=/public-assets"
+      - "traefik.http.routers.authentik-static.middlewares=authentik-static-stripprefix"
+
+  server:
+    image: {{ authentik_image }}
+    container_name: authentik-server
+    extra_hosts:
+      - "app.distill.{{ domain }}:{{ distill_backend_ip | default('172.22.0.3') }}"
+    restart: unless-stopped
+    command: server
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_BOOTSTRAP_PASSWORD=${AUTHENTIK_BOOTSTRAP_PASSWORD}
+      - AUTHENTIK_BOOTSTRAP_TOKEN=${AUTHENTIK_BOOTSTRAP_TOKEN}
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB}
+      - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${POSTGRES_PASSWORD}
+      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_EMAIL__HOST=${AUTHENTIK_EMAIL__HOST}
+      - AUTHENTIK_EMAIL__PORT=${AUTHENTIK_EMAIL__PORT}
+      - AUTHENTIK_EMAIL__USERNAME=${AUTHENTIK_EMAIL__USERNAME}
+      - AUTHENTIK_EMAIL__PASSWORD=${AUTHENTIK_EMAIL__PASSWORD}
+      - AUTHENTIK_EMAIL__USE_TLS=${AUTHENTIK_EMAIL__USE_TLS}
+      - AUTHENTIK_EMAIL__FROM=${AUTHENTIK_EMAIL__FROM}
+      - AUTHENTIK_LOG_LEVEL={{ authentik_log_level | default('debug') }}
+    volumes:
+      - authentik_media:/media
+      - authentik_custom_templates:/templates
+      - ./nerv-theme.css:/web/dist/user.css:ro
+    networks:
+      - traefik
+    depends_on:
+      - postgresql
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`{{ authentik_domain | default('idp.' + domain) }}`)"
+      - "traefik.http.routers.authentik.entrypoints=web-secure"
+      - "traefik.http.routers.authentik.tls=true"
+      - "traefik.http.routers.authentik.tls.certresolver=default"
+      - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+
+  worker:
+    image: {{ authentik_image }}
+    container_name: authentik-worker
+    extra_hosts:
+      - "app.distill.{{ domain }}:{{ distill_backend_ip | default('172.22.0.3') }}"
+    restart: unless-stopped
+    command: worker
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB}
+      - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${POSTGRES_PASSWORD}
+      - AUTHENTIK_REDIS__HOST=redis
+    volumes:
+      - authentik_media:/media
+      - authentik_certs:/certs
+    networks:
+      - traefik
+    depends_on:
+      - postgresql
+      - redis
+
+volumes:
+  authentik_postgres_data:
+  authentik_redis_data:
+  authentik_media:
+  authentik_custom_templates:
+  authentik_certs:
+
+networks:
+  traefik:
+    external: true

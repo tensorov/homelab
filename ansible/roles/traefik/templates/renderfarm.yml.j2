@@ -1,0 +1,30 @@
+http:
+  routers:
+    renderfarm-frontend:
+      rule: "Host(`renderfarm.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      service: renderfarm-frontend-svc
+      tls:
+        certResolver: default
+      priority: 10
+
+    renderfarm-backend:
+      rule: "Host(`renderfarm.{{ domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/health`))"
+      entryPoints:
+        - web-secure
+      service: renderfarm-backend-svc
+      tls:
+        certResolver: default
+      priority: 100
+
+  services:
+    renderfarm-frontend-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ renderfarm_backend_ip | default('10.0.1.2') }}:3001"
+
+    renderfarm-backend-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ renderfarm_backend_ip | default('10.0.1.2') }}:3000"

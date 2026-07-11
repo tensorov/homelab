@@ -1,0 +1,63 @@
+---
+# deploy: main playbook — full stack deployment
+# Tags allow granular runs: --tags traefik,authentik,gitlab,matrix,supabase,services
+
+- name: Deploy Traefik
+  hosts: all
+  become: yes
+  tags: [traefik, base]
+
+  tasks:
+    - name: Include Traefik role
+      ansible.builtin.include_role:
+        name: traefik
+
+- name: Deploy Authentik
+  hosts: all
+  become: yes
+  tags: [authentik, base]
+
+  tasks:
+    - name: Include Authentik role
+      ansible.builtin.include_role:
+        name: authentik
+
+- name: Deploy GitLab
+  hosts: all
+  become: yes
+  tags: [gitlab, devops]
+
+  tasks:
+    - name: Include GitLab role
+      ansible.builtin.include_role:
+        name: gitlab
+
+- name: Deploy Matrix
+  hosts: all
+  become: yes
+  tags: [matrix, communication]
+
+  tasks:
+    - name: Include Matrix role
+      ansible.builtin.include_role:
+        name: matrix
+
+- name: Deploy Supabase
+  hosts: all
+  become: yes
+  tags: [supabase, database]
+
+  tasks:
+    - name: Include Supabase role
+      ansible.builtin.include_role:
+        name: supabase
+
+- name: Deploy auxiliary services
+  hosts: all
+  become: yes
+  tags: [services]
+
+  tasks:
+    - name: Include services role
+      ansible.builtin.include_role:
+        name: services

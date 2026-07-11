@@ -1,0 +1,16 @@
+http:
+  routers:
+    amadeus-callback:
+      entryPoints:
+        - web-secure
+      rule: "Host(`amadeus.{{ domain }}`) && PathPrefix(`/outpost.goauthentik.io`)"
+      service: authentik-server-svc
+      tls:
+        certResolver: default
+      priority: 200
+
+  services:
+    authentik-server-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authentik-server:9000"

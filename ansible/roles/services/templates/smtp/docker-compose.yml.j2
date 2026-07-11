@@ -1,0 +1,14 @@
+services:
+  smtp:
+    image: bytemark/smtp
+    container_name: smtp
+    hostname: mail.{{ smtp_domain | default(domain) }}
+    restart: always
+    ports:
+      - "25:25"
+      - "587:587"
+    environment:
+      - SMTP_USERNAME={{ smtp_username | default('matrix') }}
+      - SMTP_PASSWORD={{ vault_smtp_password }}
+      - SMTP_DOMAIN={{ smtp_domain | default(domain) }}
+      - RELAY_NETWORKS=:192.168.0.0/16 172.17.0.0/16 127.0.0.0/8

@@ -1,0 +1,111 @@
+version: "3.8"
+
+services:
+  synapse:
+    image: matrixdotorg/synapse:{{ matrix_synapse_version | default('latest') }}
+    container_name: matrix-synapse
+    restart: unless-stopped
+    volumes:
+      - ./data/synapse:/data
+    expose:
+      - "8008"
+      - "8448"
+    environment:
+      - SYNAPSE_CONFIG_PATH=/data/homeserver.yaml
+      - SYNAPSE_RESTART_NUM_EXTRA_CONF_PATHS=""
+      - UID=991
+      - GID=991
+    depends_on:
+      - db
+    networks:
+      - traefik
+      - matrix
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: docker.io/postgres:{{ matrix_postgres_version | default('15-alpine') }}
+    container_name: matrix-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=synapse
+      - POSTGRES_PASSWORD={{ vault_matrix_postgres_password }}
+      - POSTGRES_DB=synapse
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - matrix
+
+  element:
+    image: vectorim/element-web:{{ matrix_element_version | default('latest') }}
+    container_name: matrix-element
+    restart: unless-stopped
+    volumes:
+      - ./data/element/config.json:/app/config.json:ro
+    depends_on:
+      - synapse
+    networks:
+      - traefik
+      - matrix
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.element.rule=Host(`{{ element_domain | default('chat.' + domain) }}`)"
+      - "traefik.http.routers.element.entrypoints=web-secure"
+      - "traefik.http.routers.element.tls=true"
+      - "traefik.http.routers.element.tls.certresolver=default"
+      - "traefik.http.services.element.loadbalancer.server.port=80"
+
+  sliding-sync-proxy:
+    image: ghcr.io/element-hq/sliding-sync:{{ matrix_sliding_sync_version | default('latest') }}
+    container_name: matrix-sliding-sync
+    restart: unless-stopped
+    environment:
+      - SYNCV3_SERVER=http://synapse:8008
+      - SYNCV3_DB=postgres://syncv3:{{ vault_matrix_syncv3_password }}@db:5432/syncv3
+      - SYNCV3_SECRET={{ vault_matrix_syncv3_secret }}
+      - SYNCV3_BIND=0.0.0.0:8070
+    depends_on:
+      - db
+    networks:
+      - matrix
+
+  # ── Bridges ─────────────────────────────────────────
+  mautrix-signal:
+    image: dock.mau.dev/mautrix/signal:{{ matrix_mautrix_signal_version | default('latest') }}
+    container_name: matrix-bridge-signal
+    restart: unless-stopped
+    volumes:
+      - ./data/bridge-signal:/data
+    depends_on:
+      - synapse
+    networks:
+      - matrix
+
+  mautrix-telegram:
+    image: dock.mau.dev/mautrix/telegram:{{ matrix_mautrix_telegram_version | default('latest') }}
+    container_name: matrix-bridge-telegram
+    restart: unless-stopped
+    volumes:
+      - ./data/bridge-telegram:/data
+    depends_on:
+      - synapse
+    networks:
+      - matrix
+
+volumes:
+  postgres:
+  synapse:
+
+networks:
+  matrix:
+  traefik:
+    external: true

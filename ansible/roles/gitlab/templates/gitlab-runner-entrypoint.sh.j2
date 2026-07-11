@@ -1,0 +1,30 @@
+#!/bin/sh
+# Register GitLab Runner
+
+GITLAB_URL="https://gitlab.{{ domain }}"
+REGISTRATION_TOKEN="{{ vault_gitlab_runner_token | default('') }}"
+
+# Wait for GitLab to be ready
+until curl -s -o /dev/null -w "%{http_code}" "$GITLAB_URL/-/health" | grep -q "200"; do
+  echo "Waiting for GitLab to be ready..."
+  sleep 5
+done
+
+# Unregister any stale runners
+gitlab-runner unregister --all-runners 2>/dev/null
+
+# Register the runner
+gitlab-runner register \
+  --non-interactive \
+  --url "$GITLAB_URL" \
+  --registration-token "$REGISTRATION_TOKEN" \
+  --executor docker \
+  --docker-image docker:latest \
+  --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
+  --description "Docker Runner" \
+  --tag-list "docker,local" \
+  --run-untagged="true" \
+  --docker-privileged="true"
+
+# Start the runner
+gitlab-runner run --working-directory=/home/gitlab-runner --config=/etc/gitlab-runner/config.toml

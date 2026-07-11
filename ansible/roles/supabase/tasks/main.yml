@@ -1,0 +1,56 @@
+---
+# supabase: Backend-as-a-Service (Postgres, Auth, Storage, Realtime)
+
+- name: Create Supabase directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  loop:
+    - /opt/services/ai/supabase/docker
+    - /opt/services/ai/supabase/docker/volumes/api
+    - /opt/services/ai/supabase/docker/volumes/db
+    - /opt/services/ai/supabase/docker/volumes/storage
+    - /opt/services/ai/supabase/docker/volumes/functions
+    - /opt/services/ai/supabase/docker/volumes/logs
+    - /opt/services/ai/supabase/docker/volumes/pooler
+
+- name: Deploy .env
+  template:
+    src: env.j2
+    dest: /opt/services/ai/supabase/docker/.env
+    mode: 0600
+  no_log: true
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/services/ai/supabase/docker/docker-compose.yml
+    mode: 0644
+  notify: restart supabase
+
+- name: Deploy Kong declarative config
+  template:
+    src: kong.yml.j2
+    dest: /opt/services/ai/supabase/docker/volumes/api/kong.yml
+    mode: 0644
+  notify: restart supabase
+
+- name: Start Supabase
+  community.docker.docker_compose:
+    project_src: /opt/services/ai/supabase/docker
+    state: present
+  register: supabase_output
+
+- name: Wait for Supabase health
+  uri:
+    url: "{{ supabase_public_url | default('https://supabase.' + domain) }}/api/health"
+    method: GET
+    status_code: 200
+    timeout: 120
+    validate_certs: "{{ supabase_validate_certs | default(true) }}"
+  register: result
+  until: result.status == 200
+  retries: 10
+  delay: 10
+  when: supabase_check_health | default(false)

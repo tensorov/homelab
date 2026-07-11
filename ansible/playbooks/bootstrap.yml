@@ -1,0 +1,51 @@
+---
+# bootstrap: initial server provisioning
+# Run once on a fresh host before deploy.yml
+
+- name: Bootstrap server
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  pre_tasks:
+    - name: Fail if not Debian
+      fail:
+        msg: "This playbook requires Debian/Ubuntu"
+      when: ansible_os_family != "Debian"
+
+  tasks:
+    - name: Include common role
+      ansible.builtin.include_role:
+        name: common
+
+    - name: Create Docker network for Traefik
+      community.docker.docker_network:
+        name: traefik
+        state: present
+        driver: bridge
+        ipam_config:
+          - subnet: "172.20.0.0/16"
+            gateway: "172.20.0.1"
+
+    - name: Create service directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      loop:
+        - /opt/services
+        - /opt/services/ai
+        - /opt/services/data
+        - /opt/services/logs
+        - /opt/services/backups
+
+    - name: Set up log rotation
+      template:
+        src: logrotate.conf.j2
+        dest: /etc/logrotate.d/services
+        mode: 0644
+      when: logrotate_configure | default(true)
+
+  handlers:
+    - name: reload logrotate
+      command: logrotate /etc/logrotate.conf

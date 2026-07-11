@@ -1,0 +1,63 @@
+$ANSIBLE_VAULT;1.1;AES256
+# ── THIS IS A SAMPLE — REPLACE WITH REAL ENCRYPTED VALUES ──
+# Usage: ansible-vault encrypt group_vars/all/vault.yml
+#
+# All vault_* variables referenced by roles must be defined here.
+#
+# Template:
+# ansible-vault encrypt_string --vault-id vault-password 'your-secret' --name 'vault_supabase_postgres_password'
+
+# ── Required (must be set) ──────────────────────────────
+#
+# vault_supabase_postgres_password:
+# vault_supabase_jwt_secret:
+# vault_supabase_anon_key:
+# vault_supabase_service_role_key:
+# vault_supabase_dashboard_password:
+#
+# vault_authentik_secret_key:
+# vault_authentik_postgres_password:
+# vault_authentik_bootstrap_token:
+# vault_authentik_client_id:
+# vault_authentik_client_secret:
+#
+# vault_gitlab_root_password:
+# vault_gitlab_secret_key:
+# vault_gitlab_runner_token:
+#
+# vault_matrix_postgres_password:
+# vault_matrix_registration_shared_secret:
+# vault_matrix_macaroon_secret:
+# vault_matrix_form_secret:
+# vault_matrix_oidc_client_id:
+# vault_matrix_oidc_client_secret:
+# vault_matrix_syncv3_password:
+# vault_matrix_syncv3_secret:
+# vault_matrix_admin_password:
+#
+# vault_grafana_admin_password:
+# vault_grafana_secret_key:
+#
+# vault_smtp_password:
+#
+# vault_jupyter_postgres_password:
+# vault_jupyterhub_crypt_key:
+# vault_jupyter_oauth_client_id:
+# vault_jupyter_oauth_client_secret:
+#
+# vault_searxng_secret_key:
+#
+# vault_mirotalk_oidc_client_id:
+# vault_mirotalk_oidc_client_secret:
+#
+# vault_opencode_web_oauth_client_id:
+# vault_opencode_web_oauth_client_secret:
+#
+# vault_restic_password:
+
+# Example encrypted value (replace):
+# vault_supabase_postgres_password: !vault |
+#   $ANSIBLE_VAULT;1.1;AES256
+#   66386439653236336[...]61383830356239
+#   3139326131656164[...]64643261346632
+#   6336376131363034[...]38613038343734

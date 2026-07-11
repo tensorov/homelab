@@ -1,0 +1,46 @@
+---
+# gitlab: Git + CI/CD
+
+- name: Create GitLab directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  loop:
+    - /opt/services/gitlab
+    - /opt/services/gitlab/runner-cache
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/services/gitlab/docker-compose.yml
+    mode: 0644
+  notify: restart gitlab
+
+- name: Deploy gitlab.rb config
+  template:
+    src: gitlab.rb.j2
+    dest: /opt/services/gitlab/gitlab.rb
+    mode: 0644
+  notify: restart gitlab
+
+- name: Deploy runner entrypoint
+  template:
+    src: gitlab-runner-entrypoint.sh.j2
+    dest: /opt/services/gitlab/gitlab-runner-entrypoint.sh
+    mode: 0755
+  notify: restart gitlab
+
+- name: Deploy .env
+  template:
+    src: env.j2
+    dest: /opt/services/gitlab/.env
+    mode: 0600
+  no_log: true
+  notify: restart gitlab
+
+- name: Start GitLab
+  community.docker.docker_compose:
+    project_src: /opt/services/gitlab
+    state: present
+  register: gitlab_output

@@ -1,0 +1,36 @@
+_format_version: "1.1"
+_transform: true
+
+services:
+  - name: auth
+    url: http://auth:9999
+    routes:
+      - name: auth-all
+        paths:
+          - /auth/v1/
+    plugins:
+      - name: cors
+  - name: rest
+    url: http://rest:3000
+    routes:
+      - name: rest-all
+        paths:
+          - /rest/v1/
+    plugins:
+      - name: cors
+  - name: realtime
+    url: http://realtime:4000
+    routes:
+      - name: realtime-all
+        paths:
+          - /realtime/v1/
+    plugins:
+      - name: cors
+  - name: storage
+    url: http://storage:5000
+    routes:
+      - name: storage-all
+        paths:
+          - /storage/v1/
+    plugins:
+      - name: cors

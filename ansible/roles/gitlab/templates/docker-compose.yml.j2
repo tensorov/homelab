@@ -1,0 +1,98 @@
+version: "3.8"
+
+services:
+  gitlab-postgresql:
+    image: postgres:{{ gitlab_postgres_version }}
+    container_name: gitlab-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - gitlab_postgres_data:/var/lib/postgresql/data
+    networks:
+      - traefik
+
+  gitlab-redis:
+    image: redis:{{ gitlab_redis_version }}
+    container_name: gitlab-redis
+    restart: unless-stopped
+    volumes:
+      - gitlab_redis_data:/data
+    networks:
+      - traefik
+
+  gitlab:
+    image: {{ gitlab_image }}
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: "gitlab.{{ domain }}"
+    ports:
+      - "{{ gitlab_ssh_port }}:22"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gitlab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-gitlab}
+      GITLAB_ROOT_PASSWORD: ${GITLAB_ROOT_PASSWORD:-changeme}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+    volumes:
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_config:/etc/gitlab
+      - ./gitlab.rb:/etc/gitlab/gitlab.rb:ro
+    networks:
+      - traefik
+    depends_on:
+      - gitlab-postgresql
+      - gitlab-redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitlab.rule=Host(`gitlab.{{ domain }}`)"
+      - "traefik.http.routers.gitlab.entrypoints=web-secure"
+      - "traefik.http.routers.gitlab.tls=true"
+      - "traefik.http.routers.gitlab.tls.certresolver=default"
+      - "traefik.http.routers.gitlab.service=gitlab-main"
+      - "traefik.http.services.gitlab-main.loadbalancer.server.port=80"
+      - "traefik.http.services.gitlab-main.loadbalancer.server.scheme=http"
+      - "traefik.http.routers.gitlab-registry.rule=Host(`registry.gitlab.{{ domain }}`)"
+      - "traefik.http.routers.gitlab-registry.entrypoints=web-secure"
+      - "traefik.http.routers.gitlab-registry.tls=true"
+      - "traefik.http.routers.gitlab-registry.tls.certresolver=default"
+      - "traefik.http.routers.gitlab-registry.service=gitlab-registry"
+      - "traefik.http.services.gitlab-registry.loadbalancer.server.port=5050"
+      - "traefik.http.services.gitlab-registry.loadbalancer.server.scheme=http"
+      - "traefik.http.routers.gitlab-pages.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pages.{{ domain }}`) || Host(`pages.{{ domain }}`)"
+      - "traefik.http.routers.gitlab-pages.entrypoints=web-secure"
+      - "traefik.http.routers.gitlab-pages.tls=true"
+      - "traefik.http.routers.gitlab-pages.tls.certresolver=default"
+      - "traefik.http.routers.gitlab-pages.service=gitlab-pages"
+      - "traefik.http.services.gitlab-pages.loadbalancer.server.port=8090"
+      - "traefik.http.services.gitlab-pages.loadbalancer.server.scheme=http"
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlab-runner
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - gitlab_runner_config:/etc/gitlab-runner
+      - ./gitlab-runner-entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    networks:
+      - traefik
+    depends_on:
+      - gitlab
+
+volumes:
+  gitlab_postgres_data:
+  gitlab_redis_data:
+  gitlab_data:
+  gitlab_logs:
+  gitlab_config:
+  gitlab_runner_config:
+
+networks:
+  traefik:
+    external: true

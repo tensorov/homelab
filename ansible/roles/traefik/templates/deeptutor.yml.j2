@@ -1,0 +1,17 @@
+http:
+  routers:
+    deeptutor:
+      rule: "Host(`{{ deeptutor_domain | default('xn--pdagoge-5wa.' + domain) }}`)"
+      entryPoints:
+        - web-secure
+      tls:
+        certResolver: default
+      service: deeptutor-service
+      middlewares:
+        - opencode-auth
+
+  services:
+    deeptutor-service:
+      loadBalancer:
+        servers:
+          - url: "http://deeptutor:3782"

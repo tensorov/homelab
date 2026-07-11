@@ -1,0 +1,20 @@
+# Ansible vault
+group_vars/all/vault.yml
+
+# Vault password (never commit)
+vault-password
+
+# Python/Ansible artifacts
+__pycache__/
+*.pyc
+*.retry
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro
+      - searxng_data:/var/lib/searxng
+    environment:
+      - SEARXNG_BASE_URL=https://{{ searxng_domain | default('searxng.' + domain) }}/
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.searxng.rule=Host(`{{ searxng_domain | default('searxng.' + domain) }}`)"
+      - "traefik.http.routers.searxng.entrypoints=web-secure"
+      - "traefik.http.routers.searxng.tls=true"
+      - "traefik.http.routers.searxng.tls.certresolver=default"
+      - "traefik.http.services.searxng.loadbalancer.server.port=8080"
+
+volumes:
+  searxng_data:
+
+networks:
+  traefik:
+    external: true

@@ -1,0 +1,48 @@
+---
+# health: check all services are responsive
+
+- name: Health check
+  hosts: all
+  become: no
+  gather_facts: no
+
+  tasks:
+    - name: Check Traefik
+      uri:
+        url: "https://{{ traefik_dashboard_domain | default('traefik.' + domain) }}/dashboard/"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      ignore_errors: yes
+
+    - name: Check Authentik
+      uri:
+        url: "https://{{ authentik_domain | default('idp.' + domain) }}/-/health/"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      ignore_errors: yes
+
+    - name: Check GitLab
+      uri:
+        url: "https://{{ gitlab_domain | default('git.' + domain) }}/-/health"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      ignore_errors: yes
+
+    - name: Check Synapse
+      uri:
+        url: "https://{{ matrix_homeserver_name | default('matrix.' + domain) }}/_matrix/federation/v1/version"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      ignore_errors: yes
+
+    - name: Print health summary
+      debug:
+        msg: |
+          Traefik:   {{ 'OK' if not traefik_check.failed else 'FAIL' }}
+          Authentik: {{ 'OK' if not authentik_check.failed else 'FAIL' }}
+          GitLab:    {{ 'OK' if not gitlab_check.failed else 'FAIL' }}
+          Synapse:   {{ 'OK' if not synapse_check.failed else 'FAIL' }}

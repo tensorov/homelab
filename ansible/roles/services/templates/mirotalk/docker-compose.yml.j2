@@ -1,0 +1,20 @@
+services:
+  mirotalk:
+    image: mirotalk/p2p:latest
+    container_name: mirotalk
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mirotalk.rule=Host(`{{ mirotalk_domain | default('meet.' + domain) }}`)"
+      - "traefik.http.routers.mirotalk.entrypoints=web-secure"
+      - "traefik.http.routers.mirotalk.tls=true"
+      - "traefik.http.routers.mirotalk.tls.certresolver=default"
+      - "traefik.http.services.mirotalk.loadbalancer.server.port=3000"
+
+networks:
+  traefik:
+    external: true

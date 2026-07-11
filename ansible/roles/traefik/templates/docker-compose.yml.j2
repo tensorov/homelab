@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: {{ traefik_image }}
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8448:8448"
+      - "8008:8008"
+      - "8080:8080"
+    environment:
+      - CF_API_EMAIL=${CF_API_EMAIL:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+      - ./letsencrypt:/letsencrypt
+      - ./ssl:/matrix/traefik/ssl
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+    name: traefik

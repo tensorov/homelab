@@ -1,0 +1,19 @@
+http:
+  routers:
+    guacamole:
+      rule: "Host(`guac.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - opencode-auth
+      service: guacamole-svc
+      tls:
+        certResolver: default
+      priority: 100
+
+  services:
+    guacamole-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ guacamole_backend_ip | default('10.0.1.2') }}:8080"
+        passHostHeader: true

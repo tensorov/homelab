@@ -1,0 +1,45 @@
+# API and dashboard
+api:
+  insecure: false
+  dashboard: false
+
+# Logs
+log:
+  level: {{ traefik_log_level | default('INFO') }}
+
+accessLog: {}
+
+# Entry points
+entryPoints:
+  web:
+    address: ":80"
+  web-secure:
+    address: ":443"
+  matrix-federation:
+    address: ":8448"
+  matrix-internal-matrix-client-api:
+    address: ":8008"
+
+# Certificate resolver - Let's Encrypt with DNS Challenge
+certificatesResolvers:
+  default:
+    acme:
+      email: {{ acme_email }}
+      storage: /letsencrypt/acme.json
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 10s
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+
+# Providers
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik
+
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true

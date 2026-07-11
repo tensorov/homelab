@@ -1,0 +1,48 @@
+---
+# backup: stop DB services, snapshot volumes, restart
+# Requires: restic or borg installed on host
+
+- name: Backup databases
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Ensure backup directory exists
+      file:
+        path: "{{ backup_dir | default('/opt/services/backups') }}"
+        state: directory
+        mode: 0755
+
+    - name: Dump GitLab DB
+      community.docker.docker_container_exec:
+        container: gitlab
+        command: gitlab-backup create
+      when: gitlab_enable | default(true)
+      ignore_errors: yes
+
+    - name: Dump Supabase DB
+      community.docker.docker_container_exec:
+        container: supabase-db-1
+        command: pg_dump -U postgres -d postgres > /tmp/supabase-dump.sql
+      when: supabase_enable | default(true)
+      ignore_errors: yes
+
+    - name: Dump Matrix DB
+      community.docker.docker_container_exec:
+        container: matrix-db
+        command: pg_dump -U synapse -d synapse > /tmp/synapse-dump.sql
+      when: matrix_enable | default(true)
+      ignore_errors: yes
+
+    - name: Copy dumps to backup dir
+      shell: |
+        docker cp matrix-db:/tmp/synapse-dump.sql {{ backup_dir | default('/opt/services/backups') }}/synapse-{{ ansible_date_time.date }}.sql || true
+        docker cp supabase-db-1:/tmp/supabase-dump.sql {{ backup_dir | default('/opt/services/backups') }}/supabase-{{ ansible_date_time.date }}.sql || true
+
+    - name: Sync to remote (restic)
+      command: restic backup {{ backup_dir | default('/opt/services/backups') }}
+      when: restic_repository is defined
+      environment:
+        RESTIC_REPOSITORY: "{{ restic_repository }}"
+        RESTIC_PASSWORD: "{{ vault_restic_password }}"

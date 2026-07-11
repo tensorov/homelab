@@ -1,0 +1,14 @@
+http:
+  routers:
+    distill-api:
+      rule: "Host(`api.distill.{{ domain }}`)"
+      entryPoints: ["web-secure"]
+      tls:
+        certResolver: default
+      service: distill-api-svc
+      priority: 10
+  services:
+    distill-api-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ distill_backend_ip | default('172.22.0.30') }}:8001"

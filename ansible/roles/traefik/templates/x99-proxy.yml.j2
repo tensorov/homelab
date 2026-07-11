@@ -1,0 +1,17 @@
+http:
+  routers:
+    x99-catchall:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - web-secure
+      service: x99-proxy-svc
+      tls:
+        certResolver: default
+      priority: 1
+
+  services:
+    x99-proxy-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ x99_backend_ip | default('10.0.1.2') }}:80"
+        passHostHeader: true

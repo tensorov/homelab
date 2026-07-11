@@ -1,0 +1,15 @@
+http:
+  routers:
+    copytrading-dashboard:
+      rule: "Host(`copytrader-alpha.{{ domain }}`)"
+      entryPoints:
+        - websecure
+      service: copytrading-dashboard
+      tls:
+        certResolver: default
+
+  services:
+    copytrading-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://{{ copytrading_backend_ip | default('172.22.0.31') }}:80"

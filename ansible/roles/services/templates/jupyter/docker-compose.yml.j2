@@ -1,0 +1,51 @@
+services:
+  jupyter-postgresql:
+    image: postgres:{{ jupyter_postgres_version | default('15-alpine') }}
+    container_name: jupyter-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: {{ jupyter_postgres_user | default('jupyter') }}
+      POSTGRES_PASSWORD: {{ vault_jupyter_postgres_password }}
+      POSTGRES_DB: {{ jupyter_postgres_db | default('jupyterhub') }}
+    volumes:
+      - jupyter_postgres_data:/var/lib/postgresql/data
+    networks:
+      - traefik
+
+  jupyterhub:
+    image: jupyterhub/jupyterhub:{{ jupyterhub_version | default('latest') }}
+    container_name: jupyterhub
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER={{ jupyter_postgres_user | default('jupyter') }}
+      - POSTGRES_PASSWORD={{ vault_jupyter_postgres_password }}
+      - POSTGRES_DB={{ jupyter_postgres_db | default('jupyterhub') }}
+      - POSTGRES_HOST=jupyter-postgresql
+      - OAUTH_CLIENT_ID={{ vault_jupyter_oauth_client_id | default('') }}
+      - OAUTH_CLIENT_SECRET={{ vault_jupyter_oauth_client_secret | default('') }}
+      - OAUTH_CALLBACK_URL=https://{{ jupyter_domain | default('jupyter.' + domain) }}/hub/oauth_callback
+      - JUPYTERHUB_CRYPT_KEY={{ vault_jupyterhub_crypt_key }}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      - jupyter_data:/data
+    networks:
+      - traefik
+    depends_on:
+      jupyter-postgresql:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jupyter.rule=Host(`{{ jupyter_domain | default('jupyter.' + domain) }}`)"
+      - "traefik.http.routers.jupyter.entrypoints=web-secure"
+      - "traefik.http.routers.jupyter.tls=true"
+      - "traefik.http.routers.jupyter.tls.certresolver=default"
+      - "traefik.http.services.jupyter.loadbalancer.server.port=8000"
+
+volumes:
+  jupyter_postgres_data:
+  jupyter_data:
+
+networks:
+  traefik:
+    external: true

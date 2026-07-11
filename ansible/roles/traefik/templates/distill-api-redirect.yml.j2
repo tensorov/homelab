@@ -1,0 +1,25 @@
+http:
+  routers:
+    distill-api-old:
+      rule: Host(`distill-api.{{ domain }}`)
+      entryPoints:
+        - web-secure
+      tls:
+        certResolver: default
+      middlewares:
+        - distill-api-old-redirect
+      service: distill-api-old-svc
+      priority: 5
+
+  middlewares:
+    distill-api-old-redirect:
+      redirectRegex:
+        regex: https://distill-api\.{{ domain | replace('.', '\.') }}(.*)
+        replacement: https://api.distill.{{ domain }}${1}
+        permanent: true
+
+  services:
+    distill-api-old-svc:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:9999

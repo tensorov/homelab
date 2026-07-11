@@ -1,0 +1,6 @@
+---
+- name: restart authentik
+  community.docker.docker_compose:
+    project_src: /opt/services/authentik
+    state: present
+    restarted: true

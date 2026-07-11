@@ -1,0 +1,78 @@
+http:
+  middlewares:
+    onlybridge-auth:
+      forwardAuth:
+        address: "http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+          - X-authentik-jwt
+          - X-authentik-meta-jwks
+          - X-authentik-meta-outpost
+          - X-authentik-meta-provider
+          - X-authentik-meta-app
+          - X-authentik-meta-version
+
+  routers:
+    onlybridge-dashboard:
+      rule: "Host(`onlybridge.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      service: onlybridge-dashboard-svc
+      tls:
+        certResolver: default
+      middlewares:
+        - onlybridge-auth
+
+    onlybridge-proxy-claude:
+      rule: "Host(`claude.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      service: onlybridge-claude-svc
+      tls:
+        certResolver: default
+
+    onlybridge-proxy-opencode:
+      rule: "Host(`opencode.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      service: onlybridge-opencode-svc
+      tls:
+        certResolver: default
+
+    onlybridge-proxy-openai:
+      rule: "Host(`openai.{{ domain }}`)"
+      entryPoints:
+        - web-secure
+      service: onlybridge-openai-svc
+      tls:
+        certResolver: default
+
+  services:
+    onlybridge-dashboard-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ onlybridge_host_ip | default('172.17.0.1') }}:8800"
+        passHostHeader: true
+
+    onlybridge-claude-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ onlybridge_host_ip | default('172.17.0.1') }}:7777"
+        passHostHeader: true
+
+    onlybridge-opencode-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ onlybridge_host_ip | default('172.17.0.1') }}:7778"
+        passHostHeader: true
+
+    onlybridge-openai-svc:
+      loadBalancer:
+        servers:
+          - url: "http://{{ onlybridge_host_ip | default('172.17.0.1') }}:7779"
+        passHostHeader: true

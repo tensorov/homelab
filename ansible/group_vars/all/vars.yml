@@ -1,0 +1,62 @@
+---
+# ── General ───────────────────────────────────────────
+domain: zeitoven.ru
+acme_email: "admin@{{ domain }}"
+timezone: Europe/Moscow
+
+# ── Docker ───────────────────────────────────────────
+docker_edition: ce
+docker_compose_version: v2.32.0
+
+# ── Traefik ──────────────────────────────────────────
+traefik_image: traefik:v3.6.7
+traefik_network: traefik
+
+# ── Authentik ─────────────────────────────────────────
+authentik_image: ghcr.io/goauthentik/server:2025.12.3
+authentik_postgres_version: 15-alpine
+authentik_redis_version: 7-alpine
+
+# ── GitLab ─────────────────────────────────────────────
+gitlab_image: gitlab/gitlab-ce:18.8.4-ce.0
+gitlab_postgres_version: 16-alpine
+gitlab_redis_version: 7-alpine
+gitlab_ssh_port: 2222
+
+# ── Domains (individual vars, used by templates) ────
+traefik_dashboard_domain: "traefik.{{ domain }}"
+authentik_domain: "idp.{{ domain }}"
+gitlab_domain: "gitlab.{{ domain }}"
+gitlab_registry_domain: "registry.gitlab.{{ domain }}"
+gitlab_pages_domain: "pages.{{ domain }}"
+grafana_domain: "grafana.{{ domain }}"
+prometheus_domain: "prometheus.{{ domain }}"
+jupyter_domain: "jupyter.{{ domain }}"
+mirotalk_domain: "meet.{{ domain }}"
+matrix_homeserver_name: "matrix.{{ domain }}"
+element_domain: "chat.{{ domain }}"
+supabase_domain: "supabase.{{ domain }}"
+searxng_domain: "searxng.{{ domain }}"
+opencode_web_domain: "opencode.{{ domain }}"
+
+# ── Service toggles ──────────────────────────────────
+searxng_enable: true
+mirotalk_enable: true
+smtp_enable: true
+jupyter_enable: false
+opencode_web_enable: false
+opencode_webhook_enable: false
+matrix_enable: true
+matrix_element_enable: true
+matrix_register_admin: false
+matrix_report_stats: false
+matrix_enable_registration: false
+supabase_enable: false
+supabase_check_health: false
+
+# ── Versions / misc ───────────────────────────────────
+searxng_theme: dark
+searxng_private: true
+element_theme: dark
+jupyter_admin_users: ["admin"]
+smtp_username: matrix

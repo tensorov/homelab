@@ -1,0 +1,25 @@
+# Environment files (secrets)
+.env
+.env.local
+
+# Docker secrets directory
+/letsencrypt/
+/ssl/
+/certs/
+
+# Ansible
+ansible/vault-password
+ansible/group_vars/all/vault.yml
+**/*.retry
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

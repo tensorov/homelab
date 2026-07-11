@@ -1,0 +1,135 @@
+---
+# services: SearXNG, MiroTalk, Khoj, Jupyterhub, SMTP, opencode-webhook, etc.
+# Each service can be toggled on/off via tags or service_enable vars.
+
+- name: Create service directories
+  file:
+    path: "/opt/services/{{ item }}"
+    state: directory
+    mode: 0755
+  loop: "{{ ansible_services | default([]) }}"
+  when: item is string
+
+# ── SearXNG ────────────────────────────────────────────
+- name: Deploy SearXNG compose
+  template:
+    src: searxng/docker-compose.yml.j2
+    dest: /opt/services/searxng/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: searxng_enable | default(true)
+
+- name: Deploy SearXNG settings
+  template:
+    src: searxng/settings.yml.j2
+    dest: /opt/services/searxng/settings.yml
+    mode: 0644
+  notify: restart services stack
+  when: searxng_enable | default(true)
+
+# ── MiroTalk ───────────────────────────────────────────
+- name: Deploy MiroTalk compose
+  template:
+    src: mirotalk/docker-compose.yml.j2
+    dest: /opt/services/mirotalk/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: mirotalk_enable | default(true)
+
+- name: Deploy MiroTalk .env
+  template:
+    src: mirotalk/env.j2
+    dest: /opt/services/mirotalk/.env
+    mode: 0600
+  no_log: true
+  when: mirotalk_enable | default(true)
+
+# ── Jupyterhub ─────────────────────────────────────────
+- name: Deploy Jupyterhub compose
+  template:
+    src: jupyter/docker-compose.yml.j2
+    dest: /opt/services/jupyter/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: jupyter_enable | default(false)
+
+- name: Deploy Jupyterhub config
+  template:
+    src: jupyter/jupyterhub_config.py.j2
+    dest: /opt/services/jupyter/jupyterhub_config.py
+    mode: 0644
+  when: jupyter_enable | default(false)
+
+# ── SMTP ───────────────────────────────────────────────
+- name: Deploy SMTP compose
+  template:
+    src: smtp/docker-compose.yml.j2
+    dest: /opt/services/smtp/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: smtp_enable | default(true)
+
+# ── opencode-webhook ───────────────────────────────────
+- name: Deploy opencode-webhook compose
+  template:
+    src: opencode-webhook/docker-compose.yml.j2
+    dest: /opt/services/opencode-webhook/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: opencode_webhook_enable | default(false)
+
+# ── opencode-web ────────────────────────────────────────
+- name: Deploy opencode-web compose
+  template:
+    src: opencode-web/docker-compose.yml.j2
+    dest: /opt/services/opencode-web/docker-compose.yml
+    mode: 0644
+  notify: restart services stack
+  when: opencode_web_enable | default(false)
+
+- name: Deploy opencode-web .env
+  template:
+    src: opencode-web/env.j2
+    dest: /opt/services/opencode-web/.env
+    mode: 0600
+  no_log: true
+  when: opencode_web_enable | default(false)
+
+# ── Start all service stacks ───────────────────────────
+- name: Start SearXNG
+  community.docker.docker_compose:
+    project_src: /opt/services/searxng
+    state: present
+  when: searxng_enable | default(true)
+
+- name: Start MiroTalk
+  community.docker.docker_compose:
+    project_src: /opt/services/mirotalk
+    state: present
+  when: mirotalk_enable | default(true)
+
+- name: Start Jupyterhub
+  community.docker.docker_compose:
+    project_src: /opt/services/jupyter
+    state: present
+  when: jupyter_enable | default(false)
+
+- name: Start SMTP
+  community.docker.docker_compose:
+    project_src: /opt/services/smtp
+    state: present
+  when: smtp_enable | default(true)
+
+- name: Start opencode-webhook
+  community.docker.docker_compose:
+    project_src: /opt/services/opencode-webhook
+    state: present
+  when: opencode_webhook_enable | default(false)
+
+- name: Start opencode-web
+  community.docker.docker_compose:
+    project_src: /opt/services/opencode-web
+    state: present
+  when: opencode_web_enable | default(false)
+
+

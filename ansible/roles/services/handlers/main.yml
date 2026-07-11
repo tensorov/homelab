@@ -1,0 +1,13 @@
+---
+- name: restart services stack
+  community.docker.docker_compose:
+    project_src: "/opt/services/{{ item }}"
+    state: present
+    restarted: true
+  loop:
+    - searxng
+    - mirotalk
+    - jupyter
+    - smtp
+    - opencode-webhook
+    - opencode-web
