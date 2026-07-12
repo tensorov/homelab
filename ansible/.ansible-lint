@@ -19,6 +19,7 @@ warn_list:
 exclude_paths:
   - .git/
   - .github/
+  - extras/
 
 # Only lint our own roles, not galaxy content
 mock_modules: []
