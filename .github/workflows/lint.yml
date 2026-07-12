@@ -50,6 +50,8 @@ jobs:
           done
 
       - name: pre-commit (ansible-focused)
+        env:
+          ANSIBLE_CONFIG: ${{ github.workspace }}/ansible/ansible.cfg
         run: |
           cd "${{ github.workspace }}"
           pre-commit run --all-files --show-diff-on-failure

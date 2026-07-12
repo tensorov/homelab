@@ -4,7 +4,7 @@ repos:
     rev: v25.1.0
     hooks:
       - id: ansible-lint
-        args: [--config-file, ansible/.ansible-lint, --ansible-config, ansible/ansible.cfg]
+        args: [--config-file, ansible/.ansible-lint]
         files: ^ansible/
         additional_dependencies: ['ansible-core>=2.13,<2.19']
 
