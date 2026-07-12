@@ -1,0 +1,3 @@
+[submodule "ansible/vendor/ssh-rtg"]
+	path = ansible/vendor/ssh-rtg
+	url = git@github.com:tensorov/ssh-rtg.git
