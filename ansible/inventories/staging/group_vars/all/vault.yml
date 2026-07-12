@@ -1,0 +1,74 @@
+---
+# ── Staging vault — CHANGE ME before use ──────────────
+# Replace with: ansible-vault encrypt_string ...
+# Then uncomment the variable.
+
+# ── Supabase ──────────────────────────────────────────
+# vault_supabase_postgres_password: "CHANGE_ME"
+# vault_supabase_jwt_secret: "CHANGE_ME"
+# vault_supabase_anon_key: "CHANGE_ME"
+# vault_supabase_service_role_key: "CHANGE_ME"
+# vault_supabase_dashboard_password: "CHANGE_ME"
+# vault_supabase_dashboard_username: "CHANGE_ME"
+
+# ── Authentik ─────────────────────────────────────────
+# vault_authentik_secret_key: "CHANGE_ME"
+# vault_authentik_postgres_password: "CHANGE_ME"
+# vault_authentik_bootstrap_token: "CHANGE_ME"
+# vault_authentik_bootstrap_password: "CHANGE_ME"
+# vault_authentik_client_id: "CHANGE_ME"
+# vault_authentik_client_secret: "CHANGE_ME"
+# vault_authentik_email_password: "CHANGE_ME"
+
+# ── GitLab ────────────────────────────────────────────
+# vault_gitlab_root_password: "CHANGE_ME"
+# vault_gitlab_secret_key: "CHANGE_ME"
+# vault_gitlab_runner_token: "CHANGE_ME"
+# vault_gitlab_postgres_password: "CHANGE_ME"
+# vault_gitlab_smtp_password: "CHANGE_ME"
+# vault_gitlab_email_from: "CHANGE_ME"
+# vault_gitlab_email_reply_to: "CHANGE_ME"
+# vault_gitlab_oauth_client_secret: "CHANGE_ME"
+
+# ── Matrix ────────────────────────────────────────────
+# vault_matrix_postgres_password: "CHANGE_ME"
+# vault_matrix_registration_shared_secret: "CHANGE_ME"
+# vault_matrix_macaroon_secret: "CHANGE_ME"
+# vault_matrix_form_secret: "CHANGE_ME"
+# vault_matrix_oidc_client_id: "CHANGE_ME"
+# vault_matrix_oidc_client_secret: "CHANGE_ME"
+# vault_matrix_syncv3_password: "CHANGE_ME"
+# vault_matrix_syncv3_secret: "CHANGE_ME"
+# vault_matrix_admin_password: "CHANGE_ME"
+
+# ── SMTP ──────────────────────────────────────────────
+# vault_smtp_password: "CHANGE_ME"
+# vault_smtp_user: "CHANGE_ME"
+
+# ── Jupyter ───────────────────────────────────────────
+# vault_jupyter_postgres_password: "CHANGE_ME"
+# vault_jupyterhub_crypt_key: "CHANGE_ME"
+# vault_jupyter_oauth_client_id: "CHANGE_ME"
+# vault_jupyter_oauth_client_secret: "CHANGE_ME"
+
+# ── SearXNG ───────────────────────────────────────────
+# vault_searxng_secret_key: "CHANGE_ME"
+
+# ── MiroTalk ──────────────────────────────────────────
+# vault_mirotalk_oidc_client_id: "CHANGE_ME"
+# vault_mirotalk_oidc_client_secret: "CHANGE_ME"
+
+# ── OpenCode Web ──────────────────────────────────────
+# vault_opencode_web_oauth_client_id: "CHANGE_ME"
+# vault_opencode_web_oauth_client_secret: "CHANGE_ME"
+
+# ── pgAdmin ───────────────────────────────────────────
+# vault_pgadmin_email: "CHANGE_ME"
+# vault_pgadmin_password: "CHANGE_ME"
+
+# ── Monitoring / Notifications ────────────────────────
+# vault_telegram_bot_token: "CHANGE_ME"
+# vault_telegram_chat_id: "CHANGE_ME"
+
+# ── Backup ────────────────────────────────────────────
+# vault_restic_password: "CHANGE_ME"

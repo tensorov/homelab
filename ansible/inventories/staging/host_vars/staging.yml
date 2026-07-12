@@ -1,0 +1,28 @@
+---
+# ── Staging host overrides ─────────────────────────────
+# host_vars beat playbook-level group_vars/all,
+# so these values override the production defaults from
+# ansible/group_vars/all/vars.yml.
+#
+# To deploy against staging:
+#   ansible-playbook -i inventories/staging/ playbooks/deploy.yml ...
+
+# Domain — isolated DNS for staging (update your /etc/hosts or DNS)
+domain: "staging.example.com"
+
+# Data paths — use staging prefix to avoid collision with production
+backup_dir: /opt/staging-services/backups
+
+# Service toggles — opt-in, all disabled by default
+traefik_enable: true           # needed for routing
+authentik_enable: false
+gitlab_enable: false
+matrix_enable: false
+supabase_enable: false
+
+searxng_enable: false
+mirotalk_enable: false
+smtp_enable: false
+jupyter_enable: false
+opencode_web_enable: false
+opencode_webhook_enable: false

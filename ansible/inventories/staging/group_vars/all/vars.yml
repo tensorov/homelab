@@ -1,0 +1,28 @@
+---
+# ── Staging group_vars (documentation / fallback) ─────
+# NOTE: playbook-level group_vars (ansible/group_vars/all/)
+# takes precedence over inventory-level group_vars.
+# For overrides that actually beat production defaults,
+# see host_vars/staging.yml.
+#
+# These vars take effect only for new variables that do
+# NOT exist in playbook-level group_vars/all/vars.yml.
+#
+# Variables defined here that overlap with production:
+#   domain, backup_dir, searxng_enable, mirotalk_enable,
+#   smtp_enable — these MUST go in host_vars/staging.yml
+#   instead.
+
+domain: "staging.example.com"
+backup_dir: /opt/staging-services/backups
+traefik_enable: true
+authentik_enable: false
+gitlab_enable: false
+matrix_enable: false
+supabase_enable: false
+searxng_enable: false
+mirotalk_enable: false
+smtp_enable: false
+jupyter_enable: false
+opencode_web_enable: false
+opencode_webhook_enable: false
