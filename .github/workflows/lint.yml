@@ -31,7 +31,7 @@ jobs:
       - name: Install tools
         run: |
           pip install --upgrade pip
-          pip install ansible-core==2.18.3 ansible-lint yamllint pre-commit
+          pip install 'ansible-core>=2.13,<2.19' ansible-lint yamllint pre-commit
           ansible-galaxy collection install community.docker community.general
 
       - name: yamllint
