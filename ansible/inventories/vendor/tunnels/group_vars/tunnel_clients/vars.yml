@@ -1,0 +1,31 @@
+---
+# ── ssh-tunnel-client group vars ──────────────────────────────────────
+# Override these in host_vars/<hostname>.yml per-machine as needed.
+# -----------------------------------------------------------------------
+
+# TCP port forwards — list of maps with {local_port, remote_port, description}
+# Each entry maps a local TCP port to a remote port on the jump host.
+# Example:
+#   ssh_tunnel_ports:
+#     - local_port:  22
+#       remote_port: 2022
+#       description: "SSH into NAT'd host"
+#     - local_port:  8080
+#       remote_port: 8080
+#       description: "Web service behind NAT"
+ssh_tunnel_ports: []
+
+# Jump host — the public VPS that accepts the reverse SSH connection.
+# Format: "tunnel@vps.example.com"
+ssh_tunnel_jump_host: ""
+
+# Local bind address for forwarded ports
+ssh_tunnel_local_host: "127.0.0.1"
+
+# SSH user on the NAT-side host that owns the tunnel
+ssh_tunnel_user: "tunnel"
+
+# Generate a new Ed25519 key pair on first run (recommended for simplicity)
+ssh_tunnel_generate_key: true
+# If you prefer to copy a pre-existing key, set generate_key to false and:
+# ssh_tunnel_private_key_src: "{{ playbook_dir }}/files/tunnel_ed25519"

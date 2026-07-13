@@ -81,10 +81,6 @@ ansible/
 │   ├── vars.yml                         # non-secret variables
 │   └── vault.yml.sample                 # template for encrypted secrets
 │
-├── inventories/
-│   ├── production/hosts.yml             # primary inventory
-│   └── staging/                         # staging overrides
-│
 ├── roles/
 │   ├── common/                          # base: packages, Docker, UFW, sysctl
 │   ├── traefik/                         # reverse proxy v3 + 17 dynamic configs
@@ -97,11 +93,17 @@ ansible/
 ├── playbooks/
 │   ├── bootstrap.yml                    # initial server provisioning
 │   ├── deploy.yml                       # full stack (tag-selectable)
+│   ├── deploy-tunnels.yml               # reverse SSH tunnels (vendor addon)
 │   ├── update.yml                       # pull latest images, restart
 │   ├── backup.yml                       # DB dumps + restic remote sync
 │   ├── restore.yml                      # restore from backup
 │   ├── rotate-secrets.yml               # vault + service secret rotation
 │   └── health.yml                       # HTTP health checks
+│
+├── inventories/
+│   ├── production/hosts.yml             # primary inventory
+│   ├── staging/                         # staging overrides
+│   └── vendor/tunnels/                  # SSH tunnel addon inventory (sample)
 │
 ├── vendor/
 │   └── ssh-rtg/                         # reverse-ssh-gateway (git submodule)
@@ -118,6 +120,7 @@ ansible/
 |----------|-------------|-------------------|
 | `bootstrap.yml` | Installs Docker, configures UFW, sysctl, base packages | First run on a bare host |
 | `deploy.yml` | Deploys the full stack; tag-selectable per role group | `make deploy` |
+| `deploy-tunnels.yml` | Deploys reverse SSH tunnels (vendor addon) | See [SSH Tunnel Addon](#ssh-tunnel-addon-vendor) |
 | `update.yml` | Pulls latest container images and restarts stacks | `make update` |
 | `backup.yml` | Dumps all databases, syncs via restic (optional) | `make backup` |
 | `restore.yml` | Restores databases from backup snapshots | Manual recovery |
@@ -271,3 +274,106 @@ roles are available alongside first-party ones.
 ```bash
 git submodule update --init --recursive   # fetch after clone
 ```
+
+---
+
+## SSH Tunnel Addon (vendor)
+
+The [reverse-ssh-gateway](https://github.com/tensorov/ssh-rtg) addon lets you
+expose services behind NAT through a public VPS via reverse SSH tunnels.  It is
+entirely optional — use it only if you have hosts without a public IP that need
+to be reachable from the internet.
+
+### Architecture
+
+```
+  NAT host  ──reverse SSH──>  VPS  ──>  internet
+ (client)                    (server)
+```
+
+The client initiates outbound SSH connections to the VPS. Each forwarded port
+creates a reverse tunnel.  On the VPS side, Traefik TCP routes and firewall
+rules handle incoming traffic.
+
+### Prerequisites
+
+```bash
+# Ensure the submodule is fetched
+git submodule update --init --recursive
+```
+
+### Sample inventory
+
+`inventories/vendor/tunnels/hosts.yml` provides a ready-to-edit skeleton:
+
+```yaml
+all:
+  children:
+    tunnel_clients:
+      hosts:
+        nat-host-01:
+          ansible_host: 192.168.1.100
+      vars:
+        ssh_tunnel_jump_host: "tunnel@vps.example.com"
+        ssh_tunnel_ports:
+          - local_port:  22
+            remote_port: 2022
+            description: "SSH into NAT'd host"
+          - local_port:  8080
+            remote_port: 8080
+            description: "Web service behind NAT"
+
+    tunnel_servers:
+      hosts:
+        vps-tunnel:
+          ansible_host: vps.example.com
+      vars:
+        ssh_tunnel_ports:
+          - local_port:  2022
+            remote_port: 22
+            description: "SSH into NAT'd host"
+          - local_port:  8080
+            remote_port: 8080
+            description: "Web service behind NAT"
+```
+
+### Deploy
+
+**Standalone** — deploy tunnels independently:
+
+```bash
+ansible-playbook -i inventories/vendor/tunnels/hosts.yml \
+  playbooks/deploy-tunnels.yml
+```
+
+**Combined with the main stack** — uncomment the tunnel block in
+`playbooks/deploy.yml`, then use:
+
+```bash
+ansible-playbook -i inventories/production/hosts.yml \
+  -i inventories/vendor/tunnels/hosts.yml \
+  playbooks/deploy.yml --tags tunnels
+```
+
+**Key exchange** — on first deployment, the client role generates an Ed25519
+key pair.  Copy the public key to the VPS tunnel user's `authorized_keys`:
+
+```bash
+# On the NAT host after deploy:
+sudo cat /home/tunnel/.ssh/id_ed25519.pub
+# Paste this into /home/tunnel/.ssh/authorized_keys on the VPS
+```
+
+### Variable reference
+
+| Variable | Role | Default | Description |
+|----------|------|---------|-------------|
+| `ssh_tunnel_ports` | both | `[]` | Port mapping list `{local_port, remote_port, description}` |
+| `ssh_tunnel_jump_host` | client | `""` | Jump host, e.g. `tunnel@vps.example.com` |
+| `ssh_tunnel_generate_key` | client | `false` | Auto-generate Ed25519 key on target |
+| `ssh_tunnel_firewall_type` | server | `ufw` | Firewall backend: `ufw` or `nftables` |
+| `ssh_tunnel_enable_ip_forwarding` | server | `true` | Enable `net.ipv4.ip_forward` |
+
+The full default reference lives in each role's `defaults/main.yml`:
+`vendor/ssh-rtg/ansible/roles/ssh-tunnel-client/defaults/main.yml`
+`vendor/ssh-rtg/ansible/roles/ssh-tunnel-server/defaults/main.yml`

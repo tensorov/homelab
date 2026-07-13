@@ -51,3 +51,26 @@
     - name: Include services role
       ansible.builtin.include_role:
         name: services
+
+# ── Vendor addon: reverse SSH tunnels ─────────────────────────────
+# Uncomment the block below if you use the ssh-rtg vendor submodule.
+# Then add tunnel hosts to your inventory (see vendor/tunnels sample):
+#   ansible-playbook -i inventories/production/hosts.yml \
+#     -i inventories/vendor/tunnels/hosts.yml \
+#     playbooks/deploy.yml --tags tunnels
+#
+# - name: Deploy SSH tunnel clients
+#   hosts: tunnel_clients
+#   become: yes
+#   tags: [tunnels, tunnels-client]
+#
+#   roles:
+#     - role: ssh-tunnel-client
+#
+# - name: Deploy SSH tunnel server
+#   hosts: tunnel_servers
+#   become: yes
+#   tags: [tunnels, tunnels-server]
+#
+#   roles:
+#     - role: ssh-tunnel-server

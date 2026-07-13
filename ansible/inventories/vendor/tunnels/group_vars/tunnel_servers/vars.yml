@@ -1,0 +1,25 @@
+---
+# ── ssh-tunnel-server group vars ──────────────────────────────────────
+# Override in host_vars per-VPS as needed.
+# -----------------------------------------------------------------------
+
+# List of tunnel port mappings.  Each entry creates a Traefik TCP route
+# and opens a firewall port.  Must match the client side.
+# Example:
+#   ssh_tunnel_ports:
+#     - local_port:  2022
+#       remote_port: 22
+#       description: "SSH into NAT'd host"
+#     - local_port:  8080
+#       remote_port: 8080
+#       description: "Web service behind NAT"
+ssh_tunnel_ports: []
+
+# System user created for SSH tunnel logins
+ssh_tunnel_server_user: "tunnel"
+
+# Firewall backend
+ssh_tunnel_firewall_type: "ufw"
+
+# Enable net.ipv4.ip_forward on the VPS
+ssh_tunnel_enable_ip_forwarding: true

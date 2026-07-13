@@ -1,0 +1,41 @@
+---
+# deploy-tunnels.yml — deploy reverse SSH tunnels (vendor addon)
+#
+# Uses the ssh-rtg roles from vendor/ssh-rtg/ to set up:
+#   - tunnel_clients: NAT-side hosts that initiate outbound SSH tunnels
+#   - tunnel_servers: public VPS that accepts and routes tunnel connections
+#
+# Prerequisites:
+#   git submodule update --init --recursive
+#
+# Usage:
+#   ansible-playbook -i inventories/vendor/tunnels/hosts.yml \
+#     playbooks/deploy-tunnels.yml
+#
+# Or combine with the main inventory:
+#   ansible-playbook -i inventories/production/hosts.yml \
+#     -i inventories/vendor/tunnels/hosts.yml \
+#     playbooks/deploy-tunnels.yml --tags tunnels
+#
+# Required variables (set in inventory group_vars):
+#   ssh_tunnel_ports    — list of {local_port, remote_port, description}
+#   ssh_tunnel_jump_host — tunnel@your-vps.com (clients only)
+#
+# See vendor/ssh-rtg/ansible/roles/ssh-tunnel-*/defaults/main.yml for
+# the full variable reference.
+
+- name: Deploy SSH tunnel clients
+  hosts: tunnel_clients
+  become: true
+  tags: [tunnels, tunnels-client]
+
+  roles:
+    - role: ssh-tunnel-client
+
+- name: Deploy SSH tunnel server
+  hosts: tunnel_servers
+  become: true
+  tags: [tunnels, tunnels-server]
+
+  roles:
+    - role: ssh-tunnel-server
