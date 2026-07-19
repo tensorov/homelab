@@ -15,6 +15,11 @@
       - /opt/services/gitlab
       - /opt/services/searxng
       - /opt/services/mirotalk
+      - /opt/services/jupyter
+      - /opt/services/smtp
+      - /opt/services/opencode-webhook
+      - /opt/services/opencode-web
+      - /opt/services/monitoring
 
   tasks:
     - name: Pull latest images

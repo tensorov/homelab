@@ -27,18 +27,27 @@
       register: gitlab_backup
       tags: [db-gitlab]
 
+    - name: List GitLab backup files
+      community.docker.docker_container_exec:
+        container: gitlab
+        command: ls -t /var/opt/gitlab/backups/*.tar 2>/dev/null || true
+      register: gitlab_backup_files
+      changed_when: false
+      failed_when: false
+      when:
+        - gitlab_enable | default(true)
+        - gitlab_backup is succeeded
+      tags: [db-gitlab]
+
+    # docker cp has no Ansible module
     - name: Copy GitLab backup
-      shell:
-        cmd: |
-          set -o pipefail
-          latest=$(docker exec gitlab ls -t /var/opt/gitlab/backups/*.tar 2>/dev/null | head -1)
-          [ -n "$latest" ] && docker cp "gitlab:$latest" \
-            "{{ backup_dir }}/gitlab-{{ ts }}.tar"
-        executable: /bin/bash
+      command:
+        cmd: "docker cp gitlab:{{ gitlab_backup_files.stdout_lines[0] }} {{ backup_dir }}/gitlab-{{ ts }}.tar"
       changed_when: true
       when:
         - gitlab_enable | default(true)
         - gitlab_backup is succeeded
+        - gitlab_backup_files.stdout_lines | length > 0
       tags: [db-gitlab]
 
     # ── Supabase ────────────────────────────────────
@@ -51,6 +60,7 @@
       register: supabase_dump
       tags: [db-supabase]
 
+    # docker cp has no Ansible module
     - name: Copy Supabase dump
       command:
         cmd: docker cp supabase-db:/tmp/supabase-dump.sql "{{ backup_dir }}/supabase-{{ ts }}.sql"
@@ -78,6 +88,7 @@
       tags: [cleanup]
 
     # ── Restic remote sync ──────────────────────────
+    # restic CLI has no Ansible module
     - name: Sync backup dir to remote (restic)
       command:
         cmd: "restic backup {{ backup_dir }} --tag homelab --tag {{ ts }}"
@@ -91,6 +102,7 @@
         RESTIC_PASSWORD: "{{ vault_restic_password }}"
       tags: [remote]
 
+    # restic CLI has no Ansible module
     - name: Forget old restic snapshots (retain 30 daily, 12 monthly)
       command:
         cmd: restic forget --keep-daily 30 --keep-monthly 12 --prune

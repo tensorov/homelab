@@ -34,9 +34,56 @@
       ignore_errors: yes
       register: health_gitlab
 
+    - name: Check Supabase
+      uri:
+        url: "https://{{ supabase_domain | default('supabase.' + domain) }}:8443/_/api/health"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      failed_when: false
+      register: health_supabase
+
+    - name: Check SearXNG
+      uri:
+        url: "https://{{ searxng_domain | default('searxng.' + domain) }}/health"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      failed_when: false
+      register: health_searxng
+
+    - name: Check MiroTalk
+      uri:
+        url: "https://{{ mirotalk_domain | default('meet.' + domain) }}"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      failed_when: false
+      register: health_mirotalk
+
+    - name: Check SMTP container
+      community.docker.docker_container_info:
+        name: smtp
+      register: health_smtp
+      failed_when: health_smtp.exists == false
+
+    - name: Check Jupyter
+      uri:
+        url: "https://{{ jupyter_domain | default('jupyter.' + domain) }}"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      failed_when: false
+      register: health_jupyter
+
     - name: Print health summary
       debug:
         msg: |
           Traefik:   {{ 'OK' if not health_traefik.failed else 'FAIL' }}
           Authentik: {{ 'OK' if not health_authentik.failed else 'FAIL' }}
           GitLab:    {{ 'OK' if not health_gitlab.failed else 'FAIL' }}
+          Supabase:  {{ 'OK' if not health_supabase.failed else 'FAIL' }}
+          SearXNG:   {{ 'OK' if not health_searxng.failed else 'FAIL' }}
+          MiroTalk:  {{ 'OK' if not health_mirotalk.failed else 'FAIL' }}
+          SMTP:      {{ 'OK' if health_smtp is defined and health_smtp.container.State.Status == 'running' else 'FAIL' }}
+          Jupyter:   {{ 'OK' if not health_jupyter.failed else 'FAIL' }}

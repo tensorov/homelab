@@ -1,3 +1,5 @@
+# {{ ansible_managed }}
+
 services:
   jupyter-postgresql:
     image: postgres:{{ jupyter_postgres_version | default('15-alpine') }}
