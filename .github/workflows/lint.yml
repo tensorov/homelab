@@ -58,7 +58,7 @@ jobs:
 
       - name: shellcheck
         run: |
-          sh_files=$(find ../roles -name '*.sh' 2>/dev/null || true)
+          sh_files=$(find . -name '*.sh' -not -path '*/vendor/*' 2>/dev/null || true)
           if [ -n "$sh_files" ]; then
             apt-get update -qq && apt-get install -y -qq shellcheck
             shellcheck $sh_files

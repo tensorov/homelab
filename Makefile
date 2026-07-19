@@ -21,7 +21,7 @@ yamllint:
 
 shellcheck:
 	@echo "--- shellcheck ---"
-	@find $(ANSIBLE_DIR)/roles -name '*.sh' -exec shellcheck {} + || true
+	@find $(ANSIBLE_DIR) -name '*.sh' -not -path '*/vendor/*' -exec shellcheck {} + || true
 
 # ── Ansible ─────────────────────────────────────────
 
