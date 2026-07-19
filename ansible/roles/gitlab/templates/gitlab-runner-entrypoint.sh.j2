@@ -13,6 +13,7 @@ done
 # Unregister any stale runners
 gitlab-runner unregister --all-runners 2>/dev/null
 
+# SECURITY: Container escape risk — intentional for CI/CD builds that require Docker-in-Docker binding
 # Register the runner
 gitlab-runner register \
   --non-interactive \

@@ -10,6 +10,8 @@ skip_list:
   - yaml[truthy]        # yes/no bools are valid YAML 1.1
   - yaml[octal-values]  # quoted octal file modes are fine
   - schema[ansible-lint-config]  # loop_var_extensions is valid
+  - var-naming[no-role-prefix]  # project convention: vars in group_vars/all/vars.yml use flat names
+  - schema[meta]                 # meta schema requires author/description; homelab roles keep minimal metadata
 
 warn_list:
   - command-instead-of-module

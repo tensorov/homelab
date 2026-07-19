@@ -15,6 +15,7 @@
     src: docker-compose.yml.j2
     dest: /opt/services/gitlab/docker-compose.yml
     mode: '0644'
+  no_log: true
   notify: restart gitlab
 
 - name: Deploy gitlab.rb config

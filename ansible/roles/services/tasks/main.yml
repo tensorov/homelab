@@ -58,6 +58,7 @@
     src: jupyter/jupyterhub_config.py.j2
     dest: /opt/services/jupyter/jupyterhub_config.py
     mode: '0644'
+  no_log: true
   when: jupyter_enable | default(false)
 
 # ── SMTP ───────────────────────────────────────────────
