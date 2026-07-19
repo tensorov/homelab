@@ -50,7 +50,7 @@
     timeout: 120
     validate_certs: "{{ supabase_validate_certs | default(true) }}"
   register: supabase_result
-  until: result.status == 200
+  until: supabase_result.status == 200
   retries: 10
   delay: 10
   when: supabase_check_health | default(false)
