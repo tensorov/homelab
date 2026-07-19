@@ -51,6 +51,13 @@
 # vault_pgadmin_email:
 # vault_pgadmin_password:
 #
+# ── Cloudflare DNS ────────────────────────────────────
+# Used by Traefik for DNS-01 ACME challenge (Let's Encrypt / ZeroSSL).
+# Generate an API token at https://dash.cloudflare.com/profile/api-tokens
+# with permissions: Zone → DNS → Edit (scoped to your domain zone).
+# vault_cf_api_email:                                  # Cloudflare account email
+# vault_cf_dns_api_token:                              # DNS API token (scoped)
+
 # ── Monitoring / notifications ───────────────────────
 # vault_telegram_bot_token:
 # vault_telegram_chat_id:
