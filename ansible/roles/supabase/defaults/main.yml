@@ -1,0 +1,10 @@
+---
+# supabase: Backend-as-a-Service defaults
+# Domain, enable flag, and health check toggle
+
+# Fully qualified domain for the Supabase studio
+supabase_domain: "supabase.{{ domain }}"
+# Enable or disable the Supabase stack deployment
+supabase_enable: false
+# Run HTTP health checks after Supabase starts
+supabase_check_health: false

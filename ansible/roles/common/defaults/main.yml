@@ -1,0 +1,10 @@
+---
+# common: base infrastructure layer
+# Docker edition, Compose version, and system timezone
+
+# Edition of Docker to install (ce = Community Edition)
+docker_edition: ce
+# Version of Docker Compose plugin to install
+docker_compose_version: v2.32.0
+# System timezone for the host
+timezone: Europe/Moscow

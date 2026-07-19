@@ -1,0 +1,14 @@
+---
+# gitlab: Git + CI/CD defaults
+# Image tags, ports, and domain for GitLab CE
+
+# GitLab CE container image
+gitlab_image: gitlab/gitlab-ce:18.8.4-ce.0
+# Postgres image tag for the GitLab database
+gitlab_postgres_version: 16-alpine
+# Redis image tag for the GitLab cache
+gitlab_redis_version: 7-alpine
+# Host port for GitLab SSH access (mapped to container port 22)
+gitlab_ssh_port: 2222
+# Fully qualified domain for the GitLab web UI
+gitlab_domain: "gitlab.{{ domain }}"

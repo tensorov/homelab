@@ -1,0 +1,19 @@
+---
+# services: auxiliary service defaults
+# Domains and enable flags for SearXNG, MiroTalk, Jupyter, SMTP, opencode
+
+# Fully qualified domains
+searxng_domain: "searxng.{{ domain }}"
+mirotalk_domain: "meet.{{ domain }}"
+jupyter_domain: "jupyter.{{ domain }}"
+
+# Per-service enable flags
+searxng_enable: true
+mirotalk_enable: true
+jupyter_enable: false
+smtp_enable: true
+opencode_web_enable: false
+opencode_webhook_enable: false
+
+# SMTP relay username
+smtp_username: matrix

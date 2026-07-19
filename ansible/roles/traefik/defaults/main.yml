@@ -1,0 +1,14 @@
+---
+# traefik: reverse proxy defaults
+# Image tag, Docker network name, dashboard domain
+
+# Traefik container image tag
+traefik_image: traefik:v3.6.7
+# External Docker network for inter-service communication
+traefik_network: traefik
+# Fully qualified domain for the Traefik dashboard
+traefik_dashboard_domain: "traefik.{{ domain }}"
+# Log verbosity level (INFO, DEBUG, WARN, ERROR)
+traefik_log_level: INFO
+# Deploy all service-specific dynamic config templates
+deploy_all_services: true

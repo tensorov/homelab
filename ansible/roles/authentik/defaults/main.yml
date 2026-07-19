@@ -1,0 +1,12 @@
+---
+# authentik: Identity Provider (IdP) defaults
+# Image tags for server, Postgres, and Redis
+
+# Authentik server container image
+authentik_image: ghcr.io/goauthentik/server:2025.12.3
+# Postgres image tag for the authentik database
+authentik_postgres_version: 15-alpine
+# Redis image tag for the authentik cache/queue
+authentik_redis_version: 7-alpine
+# Fully qualified domain for the authentik web UI
+authentik_domain: "idp.{{ domain }}"
